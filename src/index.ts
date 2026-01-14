@@ -1,8 +1,40 @@
+const emoji = `<path fill="#77B255" d="M28.938 27.441c-2.554-.89-8.111-.429-9.938 1.331V17c0-.553-.447-1-1-1s-1 .447-1
+ 1v11.772c-1.827-1.76-7.384-2.221-9.938-1.331-.741.259 5.264 8.749 9.507 4.507.168-.168.306-.33.431-.49V35c0 .553.
+447 1 1 1s1-.447 1-1v-3.542c.125.16.263.322.431.49 4.243 4.242 10.248-4.248 9.507-4.507z"/><path fill="#CCD6DD" d=
+"M12.562 25.65c-.619-.266-1.107-.837-1.378-1.513l-1.266-3.306-3.258-1.393c-1.336-.574-1.876-1.922-1.304-3.259l1.36
+2-3.181-1.364-3.269c-.541-1.35.15-2.868 1.5-3.408l3.272-1.281 1.449-3.384C12.148.32 13.496-.22 14.833.352l3.258 1.
+396L21.358.382c.675-.271 1.411-.276 2.03-.011.619.265 1.114.819 1.385 1.494l1.274 3.29 3.309 1.417c1.336.572 1.875
+ 1.921 1.305 3.258l-1.451 3.384 1.365 3.267c.541 1.35-.15 2.866-1.5 3.407l-3.271 1.281-1.363 3.183c-.572 1.336-1.9
+22 1.877-3.258 1.305l-3.308-1.417-3.267 1.364c-.676.271-1.427.311-2.046.046z"/><path fill="#E1E8ED" d="M29.356 6.5
+72l-3.309-1.417-.055-.143c-1.565 1.337-5.215 4.354-5.215 4.354l.007.123C20.015 8.879 19.057 8.5 18 8.5V1.709L14.83
+3.353c-1.337-.572-2.685-.032-3.258 1.304l-1.449 3.384-.061.024 4.753 4.754c-.814.813-1.318 1.938-1.318 3.181H6.717
+l-1.361 3.178c-.572 1.337-.032 2.686 1.304 3.259l3.258 1.394.002.006 4.496-5.142c.822 1.09 2.115 1.805 3.584 1.805
+h.005c.006 1.979.015 5.273.012 6.801l3.164 1.356c1.336.572 2.686.031 3.258-1.305l1.362-3.18-5.192-4.517c1.14-.816 
+1.89-2.145 1.89-3.654 0-.071-.018-.137-.021-.208 1.802.182 4.951.472 6.822.642l-.092-.22L30.66 9.83c.571-1.337.031
+-2.686-1.304-3.258z"/><circle fill="#F4900C" cx="18" cy="13" r="5"/>`
+
+function tikzDoc(tikz: string) {
+    return `\\documentclass{standalone}
+\\usepackage{tikz}
+\\usetikzlibrary{svg.path}
+\\begin{document}
+\\begin{tikzpicture}[y=1pt, x=1pt]
+    \\begin{scope}[yscale=-1]
+        ${tikz}
+    \\end{scope}
+\\end{tikzpicture}
+\\end{document}`
+}
+
+function svgDoc(svg: string) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${svg}</svg>`
+}
+
 export namespace tikzsvg {
     export interface Common {
-        fill: string
-        stroke: string
-        strokeWidth: number
+        fill?: string
+        stroke?: string
+        strokeWidth?: number
     }
 
     export interface Path extends Common {
@@ -21,16 +53,46 @@ export namespace tikzsvg {
 
     type types = Element["type"]
 
+    export function fromSvg(svg: string) {
+        const tag = /<(\w+)([^>]*)\/?>/g
+        const attr = /(\w+(?:-\w+)?)\s*=\s*(["'])([\s\S]*?)\2/g
+        const tags = svg.matchAll(tag)
+        return Array.from(tags).map(tag => ({
+            tag: tag[1],
+            attributes: Array.from(tag[2].matchAll(attr)).reduce((acc, [, name, , value]) => {
+                acc[name] = value
+                return acc
+            }, {} as Record<string, string>),
+        }))
+    }
+
     type To = {
         [t in types]: (args: Extract<Element, { type: t }>) => string
     }
 
     const ToSvg: To = {
-        circle: ({ cx, cy, r, fill, stroke, strokeWidth }) =>
-            `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`,
+        circle: ({ cx, cy, r, fill, stroke, strokeWidth }) => {
+            const attrs = [
+                `cx="${cx}"`,
+                `cy="${cy}"`,
+                `r="${r}"`,
+                fill ? `fill="${fill}"` : '',
+                stroke ? `stroke="${stroke}"` : '',
+                strokeWidth ? `stroke-width="${strokeWidth}"` : '',
+            ].filter(Boolean).join(' ')
+            return `<circle ${attrs}/>`
+        },
 
-        path: ({ d, fill, stroke, strokeWidth }) =>
-            `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"/>`,
+        path: ({ d, fill, stroke, strokeWidth }) => {
+            const attrs = [
+                `d="${d}"`,
+                fill ? `fill="${fill}"` : '',
+                stroke ? `stroke="${stroke}"` : '',
+                strokeWidth ? `stroke-width="${strokeWidth}"` : '',
+            ].filter(Boolean).join(' ')
+
+            return `<path ${attrs}/>`
+        }
     }
 
     export function toSvg(elements: Element[]): string {
@@ -38,50 +100,34 @@ export namespace tikzsvg {
     }
 
     const ToTikz: To = {
-        circle: ({ cx, cy, r, fill, stroke, strokeWidth }) =>
-            `\\draw [fill=${fill}, draw=${stroke}, line width=${strokeWidth}pt] (${cx}, ${cy}) circle (${r});`,
+        circle: ({ cx, cy, r, fill, stroke, strokeWidth }) => {
+            const attrs = [
+                fill ? `fill=${fill}` : '',
+                stroke ? `draw=${stroke}` : '',
+                strokeWidth ? `line width=${strokeWidth}pt` : '',
+            ].filter(Boolean).join(', ')
 
-        path: ({ d, fill, stroke, strokeWidth }) =>
-            `\\draw [fill=${fill}, draw=${stroke}, line width=${strokeWidth}pt] svg {${d}};`,
+            return `\\draw [${attrs}] (${cx}, ${cy}) circle (${r});`
+        },
+
+        path: ({ d, fill, stroke, strokeWidth }) => {
+            const attrs = [
+                fill ? `fill=${fill}` : '',
+                stroke ? `draw=${stroke}` : '',
+                strokeWidth ? `line width=${strokeWidth}pt` : '',
+            ].filter(Boolean).join(', ')
+
+            return `\\draw [${attrs}] svg {${d}};`
+        },
     }
 
     export function toTikz(elements: Element[]): string {
         return elements.map(e => ToTikz[e.type](e as any)).join('\n')
     }
 
+
 }
 if (module === require.main) {
-    const es: tikzsvg.Element[] = [
-        {
-            type: "circle",
-            cx: 50,
-            cy: 50,
-            r: 40,
-            fill: "blue",
-            stroke: "black",
-            strokeWidth: 2,
-        },
-        {
-            type: "path",
-            d: "M10 10 H 90 V 90 H 10 Z",
-            fill: "none",
-            stroke: "blue",
-            strokeWidth: 1,
-        }
-    ]
-
-    const svg = tikzsvg.toSvg(es)
-    const tikz = tikzsvg.toTikz(es)
-
-    await Bun.write("output.svg", `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${svg}</svg>`)
-    await Bun.write("output.tex", `\\documentclass{standalone}
-\\usepackage{tikz}
-\\usetikzlibrary{svg.path}
-\\begin{document}
-\\begin{tikzpicture}[y=1pt, x=1pt]
-    \\begin{scope}[yscale=-1]
-        ${tikz}
-    \\end{scope}
-\\end{tikzpicture}
-\\end{document}`)
+    const res = tikzsvg.fromSvg(emoji)
+    console.log(res)
 }

@@ -24,7 +24,7 @@ ${tikz}
 }
 
 function svgDoc(svg: string) {
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">${svg}</svg>`
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 48 48">${svg}</svg>`
 }
 
 export namespace tikzsvg {
@@ -175,6 +175,9 @@ export namespace tikzsvg {
 }
 if (module === require.main) {
     const es = tikzsvg.fromSvg(emoji)
+    const svg = tikzsvg.toSvg(es)
     const tikz = tikzsvg.toTikz(es)
+
+    await Bun.write("output.svg", svgDoc(svg))
     await Bun.write("output.tex", tikzDoc(tikz))
 }

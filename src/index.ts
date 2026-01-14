@@ -45,19 +45,33 @@ export namespace tikzsvg {
 }
 
 
-// <svg
-//   width="120"
-//   height="120"
-//   viewBox="0 0 120 120"
-//   xmlns="http://www.w3.org/2000/svg"
-// >
-//   <circle
-//     cx="60"
-//     cy="60"
-//     r="40"
-//     fill="steelblue"
-//     stroke="black"
-//     stroke-width="2"
-//   />
-// </svg>
+if (module === require.main) {
+    const elem: tikzsvg.Element = {
+        width: 120,
+        height: 120,
+        kids: [
+            {
+                cx: 60,
+                cy: 60,
+                r: 40,
+                fill: "blue",
+                stroke: "black",
+                strokeWidth: 2,
+            },
+        ],
+    }
 
+    await Bun.write("output.svg", tikzsvg.toSvg(elem))
+    const tikz = tikzsvg.toTikz(elem)
+    const tex = String.raw`
+    \documentclass[tikz,border=0]{standalone}
+    \usepackage{tikz}                        
+
+    \begin{document}
+
+    ${tikz}
+    \end{document}
+
+    `
+    await Bun.write("output.tex", tex)
+}

@@ -7,3 +7,4 @@ node_modules
 *.tex
 *.fdb_latexmk
 *.aux
+*.svg

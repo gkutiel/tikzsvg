@@ -139,7 +139,8 @@ export namespace tikzsvg {
                 strokeWidth ? `line width=${strokeWidth}pt` : '',
             ].filter(Boolean).join(', ')
 
-            return `\\fill [${attrs}] (${cx}, ${cy}) circle (${r});`
+            const cmd = stroke ? '\\draw' : '\\fill'
+            return `${cmd} [${attrs}] (${cx}, ${cy}) circle (${r});`
         },
 
         path: ({ d, fill, stroke, strokeWidth }) => {
@@ -149,7 +150,8 @@ export namespace tikzsvg {
                 strokeWidth ? `line width=${strokeWidth}pt` : '',
             ].filter(Boolean).join(', ')
 
-            return `\\fill [${attrs}] svg {${d}};`
+            const cmd = stroke ? '\\draw' : '\\fill'
+            return `${cmd} [${attrs}] svg {${d}};`
         },
     }
 

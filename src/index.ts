@@ -53,18 +53,53 @@ export namespace tikzsvg {
 
     type types = Element["type"]
 
-    export function fromSvg(svg: string) {
+    type From = {
+        [t in types]: (attrs: Record<string, string>) => Extract<Element, { type: t }>
+    }
+
+    const FromSvg: From = {
+        circle: ({ cx, cy, r, fill, stroke, strokeWidth }) => ({
+            type: "circle",
+            cx: Number(cx),
+            cy: Number(cy),
+            r: Number(r),
+            fill: fill,
+            stroke: stroke,
+            strokeWidth: strokeWidth ? Number(strokeWidth) : undefined,
+        }),
+        path: ({ d, fill, stroke, strokeWidth }) => ({
+            type: "path",
+            d: d,
+            fill: fill,
+            stroke: stroke,
+            strokeWidth: strokeWidth ? Number(strokeWidth) : undefined,
+        }),
+    }
+
+    interface Tag {
+        tag: types
+        attributes: Record<string, string>
+    }
+
+    function parseSvg(svg: string): Tag[] {
         const tag = /<(\w+)([^>]*)\/?>/g
         const attr = /(\w+(?:-\w+)?)\s*=\s*(["'])([\s\S]*?)\2/g
-        const tags = svg.matchAll(tag)
-        return Array.from(tags).map(tag => ({
-            tag: tag[1],
-            attributes: Array.from(tag[2].matchAll(attr)).reduce((acc, [, name, , value]) => {
-                acc[name] = value
-                return acc
-            }, {} as Record<string, string>),
-        }))
+        const tags = svg.replaceAll('\n', '').matchAll(tag)
+        return Array.from(tags).map(tag => {
+            return {
+                tag: tag[1] as types,
+                attributes: Array.from(tag[2].matchAll(attr)).reduce((acc, [, name, , value]) => {
+                    acc[name] = value
+                    return acc
+                }, {} as Record<string, string>),
+            }
+        })
     }
+
+    export function fromSvg(svg: string): Element[] {
+        return parseSvg(svg).map(tag => FromSvg[tag.tag](tag.attributes))
+    }
+
 
     type To = {
         [t in types]: (args: Extract<Element, { type: t }>) => string

@@ -139,7 +139,7 @@ export namespace tikzsvg {
                 strokeWidth ? `line width=${strokeWidth}pt` : '',
             ].filter(Boolean).join(', ')
 
-            return `\\draw [${attrs}] (${cx}, ${cy}) circle (${r});`
+            return `\\fill [${attrs}] (${cx}, ${cy}) circle (${r});`
         },
 
         path: ({ d, fill, stroke, strokeWidth }) => {
@@ -149,7 +149,7 @@ export namespace tikzsvg {
                 strokeWidth ? `line width=${strokeWidth}pt` : '',
             ].filter(Boolean).join(', ')
 
-            return `\\draw [${attrs}] svg {${d}};`
+            return `\\fill [${attrs}] svg {${d}};`
         },
     }
 
@@ -164,7 +164,7 @@ export namespace tikzsvg {
         return [
             Object.entries(cs).map(([c, i]) => `\\definecolor{col${i}}{HTML}{${c.replace('#', '')}}`).join('\n'),
             '\\begin{tikzpicture}[y=1pt, x=1pt]',
-            '\\begin{scope}[yscale=-1]',
+            '\\begin{scope}[yscale=-10, xscale=10]',
             es,
             '\\end{scope}',
             '\\end{tikzpicture}'

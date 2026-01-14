@@ -16,13 +16,10 @@ h.005c.006 1.979.015 5.273.012 6.801l3.164 1.356c1.336.572 2.686.031 3.258-1.305
 function tikzDoc(tikz: string) {
     return `\\documentclass{standalone}
 \\usepackage{tikz}
+\\usepackage[HTML]{xcolor}
 \\usetikzlibrary{svg.path}
 \\begin{document}
-\\begin{tikzpicture}[y=1pt, x=1pt]
-    \\begin{scope}[yscale=-1]
-        ${tikz}
-    \\end{scope}
-\\end{tikzpicture}
+${tikz}
 \\end{document}`
 }
 
@@ -157,12 +154,27 @@ export namespace tikzsvg {
     }
 
     export function toTikz(elements: Element[]): string {
-        return elements.map(e => ToTikz[e.type](e as any)).join('\n')
+        const cs = Object.fromEntries(elements.flatMap(e => [e.fill, e.stroke]).filter((c): c is string => !!c).map((c, i) => [c, i]))
+        const es = elements.map(e => ToTikz[e.type]({
+            ...e,
+            fill: e.fill ? `col${cs[e.fill]}` : undefined,
+            stroke: e.stroke ? `col${cs[e.stroke]}` : undefined,
+        } as Element as any)).join('\n')
+
+        return [
+            Object.entries(cs).map(([c, i]) => `\\definecolor{col${i}}{HTML}{${c.replace('#', '')}}`).join('\n'),
+            '\\begin{tikzpicture}[y=1pt, x=1pt]',
+            '\\begin{scope}[yscale=-1]',
+            es,
+            '\\end{scope}',
+            '\\end{tikzpicture}'
+        ].join('\n')
     }
 
 
 }
 if (module === require.main) {
-    const res = tikzsvg.fromSvg(emoji)
-    console.log(res)
+    const es = tikzsvg.fromSvg(emoji)
+    const tikz = tikzsvg.toTikz(es)
+    await Bun.write("output.tex", tikzDoc(tikz))
 }

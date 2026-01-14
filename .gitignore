@@ -1,0 +1,9 @@
+node_modules
+.vscode
+
+*.fls
+*.log
+*.pdf
+*.tex
+*.fdb_latexmk
+*.aux

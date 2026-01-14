@@ -1,0 +1,17 @@
+{
+  "name": "tikzsvg",
+  "version": "0.1.0",
+  "type": "module",
+  "module": "dist/tikzsvg.es.js",
+  "types": "dist/tikzsvg.d.ts",
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "scripts": {
+    "build": "vite build"
+  }
+}

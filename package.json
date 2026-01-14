@@ -13,5 +13,8 @@
   },
   "scripts": {
     "build": "vite build"
+  },
+  "devDependencies": {
+    "bun": "^1.3.6"
   }
 }

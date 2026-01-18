@@ -59,7 +59,7 @@ function hex(s: string | undefined): string | undefined {
     return res.length === 3 ? res.split('').map(c => c + c).join('') : res
 }
 
-export function fromSvg(svg: string): Group[] {
+function fromSvg(svg: string): Group[] {
 
     const res: Group[] = [{
         type: "g",
@@ -202,7 +202,6 @@ export function toTex(book: Book) {
 
     return String.raw`
 \documentclass[a5paper, oneside]{article}
-\usepackage[utf8]{inputenc}
 \usepackage[margin=0cm,bottom=2cm]{geometry}
 \usepackage{tikz}
 \usetikzlibrary{svg.path}

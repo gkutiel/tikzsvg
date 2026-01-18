@@ -1,3 +1,5 @@
+import z from 'zod'
+
 const emoji = `<g><path fill="#3E721D" d="M28 27c-8 0-8 6-8 6V22h-4v11s0-6-8-6c-4 0-7-2-7-2s0 9 9 9h6s0 2 2 2 2-2 2-2h6c9
  0 9-9 9-9s-3 2-7 2z"/><path fill="#FFAC33" d="M21.125 27.662c-.328 0-.651-.097-.927-.283l-2.323-1.575-2.322 1.575
 c-.277.186-.601.283-.929.283-.143 0-.287-.018-.429-.057-.462-.123-.851-.441-1.06-.874l-1.225-2.527-2.797.204c-.04.
@@ -12,34 +14,35 @@ c-.277.186-.601.283-.929.283-.143 0-.287-.018-.429-.057-.462-.123-.851-.441-1.06
 .225 2.527c-.209.433-.598.751-1.062.874-.139.04-.284.057-.428.057z"/><circle fill="#732700" cx="18" cy="14" r="7"/
 ></g>`
 
-interface Common {
-    fill?: string
-    stroke?: string
-    strokeWidth?: number
-}
+type Path = z.infer<typeof Path>
+const Path = z.object({
+    type: z.literal("path"),
+    d: z.string(),
+    fill: z.string(),
+})
 
-interface Path extends Common {
-    type: "path"
-    d: string
-}
+type Circle = z.infer<typeof Circle>
+const Circle = z.object({
+    type: z.literal("circle"),
+    cx: z.number(),
+    cy: z.number(),
+    r: z.number(),
+    fill: z.string(),
+})
 
-interface Circle extends Common {
-    type: "circle"
-    cx: number
-    cy: number
-    r: number
-}
 
-type Element = Path | Circle
 type types = Element["type"]
+type Element = z.infer<typeof Element>
+const Element = z.union([Path, Circle])
 
-interface Emoji {
-    x: number
-    y: number
-    scale: number
-    rotate: number
-    elements: Element[]
-}
+type Emoji = z.infer<typeof Emoji>
+const Emoji = z.object({
+    x: z.number(),
+    y: z.number(),
+    scale: z.number(),
+    rotate: z.number(),
+    elements: z.array(Element),
+})
 
 type From = {
     [t in types]: (attrs: Record<string, string>) => Extract<Element, { type: t }>
@@ -102,39 +105,27 @@ type To = {
 }
 
 const ToTikz: To = {
-    circle: ({ cx, cy, r, fill, stroke, strokeWidth }) => {
-        const attrs = [
-            fill ? `fill=${fill}` : '',
-            stroke ? `draw=${stroke}` : '',
-            strokeWidth ? `line width=${strokeWidth}pt` : '',
-        ].filter(Boolean).join(', ')
-
-        const cmd = stroke ? '\\draw' : '\\fill'
-        return `${cmd} [${attrs}] (${cx}, ${cy}) circle (${r});`
+    circle: ({ cx, cy, r, fill }) => {
+        return `\\fill [fill=${fill}] (${cx}, ${cy}) circle (${r});`
     },
 
-    path: ({ d, fill, stroke, strokeWidth }) => {
-        const attrs = [
-            fill ? `fill=${fill}` : '',
-            stroke ? `draw=${stroke}` : '',
-            strokeWidth ? `line width=${strokeWidth}pt` : '',
-        ].filter(Boolean).join(', ')
-
-        const cmd = stroke ? '\\draw' : '\\fill'
-        return `${cmd} [${attrs}] svg {${d}};`
+    path: ({ d, fill }) => {
+        return `\\fill [fill=${fill}] svg {${d}};`
     },
 }
 
-interface Page {
-    gradient: [string, string]
-    textBg: string
-    text: string[]
-    emojis: Emoji[]
-}
+type Page = z.infer<typeof Page>
+const Page = z.object({
+    gradient: z.array(z.string()).length(2),
+    textBg: z.string(),
+    text: z.array(z.string()),
+    emojis: z.array(Emoji),
+})
 
-interface Book {
-    pages: Page[]
-}
+type Book = z.infer<typeof Book>
+const Book = z.object({
+    pages: z.array(Page),
+})
 
 function colorMap(colors: Set<string>) {
     colors.delete(undefined)
@@ -143,10 +134,14 @@ function colorMap(colors: Set<string>) {
 
 function toTex(book: Book) {
     const pages = book.pages
-    const colors = colorMap(new Set([
-        ...pages.flatMap(p => p.gradient),
-        ...pages.map(p => p.textBg),
-        ...pages.flatMap(p => p.emojis.flatMap(es => es.elements.flatMap(e => [e.fill, e.stroke])))
+
+    const gradColors = pages.flatMap<string>(p => p.gradient)
+    const textBgColors = pages.map(p => p.textBg)
+    const emojiColors = pages.flatMap(p => p.emojis.flatMap(es => es.elements.map<string>(e => e.fill)))
+    const colors = colorMap(new Set<string>([
+        ...gradColors,
+        ...textBgColors,
+        ...emojiColors
     ]))
 
     return String.raw`
@@ -188,8 +183,7 @@ ${book.pages.map((page, i) => {
         \begin{scope}[x=1pt, y=1pt, xshift=${emoji.x}, scale=${emoji.scale}, yscale=-1, yshift=${emoji.y}, rotate=${emoji.rotate}]
             ${emoji.elements.map(e => ToTikz[e.type]({
             ...e,
-            fill: e.fill ? `c${colors[e.fill]}` : undefined,
-            stroke: e.stroke ? `c${colors[e.stroke]}` : undefined,
+            fill: `c${colors[e.fill]}`,
         } as Element as any)).join('\n')}
         \end{scope}
         `).join('\n')

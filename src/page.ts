@@ -33,7 +33,13 @@ interface Circle extends Common {
 type Element = Path | Circle
 type types = Element["type"]
 
-type Emoji = Element[]
+interface Emoji {
+    x: number
+    y: number
+    scale: number
+    rotate: number
+    elements: Element[]
+}
 
 type From = {
     [t in types]: (attrs: Record<string, string>) => Extract<Element, { type: t }>
@@ -140,7 +146,7 @@ function toTex(book: Book) {
     const colors = colorMap(new Set([
         ...pages.flatMap(p => p.gradient),
         ...pages.map(p => p.textBg),
-        ...pages.flatMap(p => p.emojis.flatMap(es => es.flatMap(e => [e.fill, e.stroke])))
+        ...pages.flatMap(p => p.emojis.flatMap(es => es.elements.flatMap(e => [e.fill, e.stroke])))
     ]))
 
     return String.raw`
@@ -179,8 +185,8 @@ ${Object.entries(colors).map(([color, i]) => `\\definecolor{c${i}}{HTML}{${color
 ${book.pages.map((page, i) => {
         const [c1, c2] = page.gradient
         const es = page.emojis.map(emoji => String.raw`
-        \begin{scope}[x=1pt, y=1pt, xshift=28, yshift=-50, xscale=2, yscale=-2, rotate=30]
-            ${emoji.map(e => ToTikz[e.type]({
+        \begin{scope}[x=1pt, y=1pt, xshift=${emoji.x}, scale=${emoji.scale}, yscale=-1, yshift=${emoji.y}, rotate=${emoji.rotate}]
+            ${emoji.elements.map(e => ToTikz[e.type]({
             ...e,
             fill: e.fill ? `c${colors[e.fill]}` : undefined,
             stroke: e.stroke ? `c${colors[e.stroke]}` : undefined,
@@ -245,7 +251,13 @@ if (require.main === module) {
                 gradient: ['#8B4513', '#FFD1E0'],
                 textBg: '#FFF3E6',
                 emojis: [
-                    fromSvg(emoji)
+                    {
+                        x: 10,
+                        y: 20,
+                        scale: 1.8,
+                        rotate: -15,
+                        elements: fromSvg(emoji)
+                    }
                 ],
                 text: [
                     'שלי בת השש-עשרה רצה למטבח.',

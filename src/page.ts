@@ -195,8 +195,6 @@ function toTex(book: Book) {
         }
     }
 
-    console.log('Colors used:', colors)
-
     return String.raw`
 \documentclass[a5paper, oneside]{article}
 \usepackage[utf8]{inputenc}
@@ -235,7 +233,6 @@ ${book.pages.map((page, i) => {
         const es = page.emojis.map(({ emoji, x, y, scale, rotate }) => String.raw`
         \begin{scope}[x=1pt, y=1pt, xshift=${x}, scale=${scale}, yscale=-1, yshift=${y}, rotate=${rotate}]
             ${emojis[emoji].emoji.map(e => {
-            console.log(e)
             return ToTikz[e.type](e as any)
         }).join('\n')}
         \end{scope}`).join('\n')
@@ -306,7 +303,14 @@ if (require.main === module) {
                         scale: 1.8,
                         rotate: -15,
                         emoji: '🌸'
-                    }
+                    },
+                    {
+                        x: 300,
+                        y: 10,
+                        scale: 2.1,
+                        rotate: 15,
+                        emoji: '🌼'
+                    },
                 ],
                 text: [
                     'שלי בת השש-עשרה רצה למטבח.',

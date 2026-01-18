@@ -9,3 +9,5 @@ node_modules
 *.aux
 *.svg
 *.jpg
+*.ttf
+*.xdv

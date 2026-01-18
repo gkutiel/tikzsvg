@@ -1,5 +1,6 @@
 interface Page {
     gradient: [string, string]
+    textBg: string
     text: string[]
 }
 
@@ -12,7 +13,10 @@ function colorMap(colors: Set<string>) {
 }
 
 function toTex(book: Book) {
-    const colors = colorMap(new Set(book.pages.flatMap(p => p.gradient)))
+    const colors = colorMap(new Set([
+        ...book.pages.flatMap(p => p.gradient),
+        ...book.pages.map(p => p.textBg)
+    ]))
 
     return String.raw`
 \documentclass[a5paper, oneside]{article}
@@ -44,6 +48,14 @@ ${book.pages.map((page, i) => {
     \begin{tikzpicture}[remember picture, overlay]
         \shade[shading=axis, bottom color=c${colors[c1]}, top color=c${colors[c2]}, shading angle=45] 
         (current page.south west) rectangle ([xshift=148.5mm]current page.north east);
+        \fill[
+            opacity=0.5,
+            color=c${colors[page.textBg]},
+            yshift=-20,
+            xscale=380,
+            yscale=-500,
+            ] svg {M 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05 C 0.76 0.00 0.54 0.02 0.41 0.05 C 0.28 0.08 0.12 0.10 0.06 0.24 C 0.00 0.37 0.00 0.73 0.05 0.85 C 0.11 0.97 0.26 0.94 0.39 0.96 C 0.51 0.98 0.71 1.00 0.80 0.96 C 0.90 0.92 0.94 0.82 0.97 0.72 C 1.00 0.62 0.99 0.48 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05};
+
     \end{tikzpicture}
 
 \vspace*{\fill}
@@ -85,6 +97,7 @@ if (require.main === module) {
         pages: [
             {
                 gradient: ['#8B4513', '#FFD1E0'],
+                textBg: '#FFF3E6',
                 text: [
                     'שלי בת השש-עשרה רצה למטבח.',
                     'היא רצתה עוגיות שוקולד טעימות!',

@@ -1,5 +1,6 @@
 interface Page {
     gradient: [string, string]
+    text: string[]
 }
 
 interface Book {
@@ -16,14 +17,18 @@ function toTex(book: Book) {
     return String.raw`
 \documentclass[a5paper, oneside]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[
-    left=0cm,
-    right=0cm,
-    top=0cm, 
-    bottom=2cm
-]{geometry}
+\usepackage[margin=0cm,bottom=2cm]{geometry}
 \usepackage{tikz}
 \usetikzlibrary{svg.path}
+
+\usepackage{polyglossia}
+\setmainlanguage{hebrew}
+\newfontfamily\hebrewfont[
+    Script=Hebrew,
+    Path=./,                
+    BoldFont={Alef-Bold.ttf} 
+]{Alef-Bold.ttf}
+
 
 ${Object.entries(colors).map(([color, i]) => `\\definecolor{c${i}}{HTML}{${color.replace('#', '')}}`).join('\n')}
 
@@ -41,9 +46,14 @@ ${book.pages.map((page, i) => {
         (current page.south west) rectangle ([xshift=148.5mm]current page.north east);
     \end{tikzpicture}
 
-    \vspace*{\fill}
-    Page ${i + 2}
-    \vspace*{\fill}
+\vspace*{\fill}
+\begin{center}
+    \begin{minipage}{10cm}
+        \Huge 
+        ${page.text.map(line => line.trim()).join('\\\\')}
+    \end{minipage}
+\end{center}
+\vspace*{\fill}
     
     \newpage
     
@@ -73,7 +83,15 @@ ${book.pages.map((page, i) => {
 if (require.main === module) {
     const book: Book = {
         pages: [
-            { gradient: ['#8B4513', '#FFD1E0'] },
+            {
+                gradient: ['#8B4513', '#FFD1E0'],
+                text: [
+                    'שלי בת השש-עשרה רצה למטבח.',
+                    'היא רצתה עוגיות שוקולד טעימות!',
+                    'אבל אוי ואבוי!',
+                    'הקופסה הייתה ריקה לגמרי!'
+                ],
+            },
         ]
     }
 

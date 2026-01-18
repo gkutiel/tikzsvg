@@ -1,24 +1,13 @@
+import assert from 'assert'
+import sax from 'sax'
 import z from 'zod'
-
-const emoji = `<g><path fill="#3E721D" d="M28 27c-8 0-8 6-8 6V22h-4v11s0-6-8-6c-4 0-7-2-7-2s0 9 9 9h6s0 2 2 2 2-2 2-2h6c9
- 0 9-9 9-9s-3 2-7 2z"/><path fill="#FFAC33" d="M21.125 27.662c-.328 0-.651-.097-.927-.283l-2.323-1.575-2.322 1.575
-c-.277.186-.601.283-.929.283-.143 0-.287-.018-.429-.057-.462-.123-.851-.441-1.06-.874l-1.225-2.527-2.797.204c-.04.
-002-.079.004-.119.004-.438 0-.86-.174-1.17-.484-.34-.342-.516-.81-.481-1.288l.201-2.8-2.523-1.225c-.432-.209-.751-
-.598-.876-1.062-.125-.464-.042-.958.228-1.356l1.573-2.323-1.573-2.322c-.27-.398-.353-.892-.228-1.357.125-.462.444-
-.851.876-1.06L7.544 7.91l-.201-2.797c-.034-.48.142-.951.481-1.289.31-.312.732-.485 1.17-.485.04 0 .079 0 .119.003l
-2.797.201 1.225-2.523c.209-.432.598-.751 1.06-.876.142-.038.285-.057.429-.057.328 0 .651.098.929.285l2.322 1.573L2
-0.198.372c.275-.188.599-.285.927-.285.144 0 .29.02.428.057.465.125.854.444 1.062.876l1.225 2.523 2.8-.201c.037-.00
-3.078-.003.116-.003.438 0 .858.173 1.172.485.338.338.515.809.48 1.289l-.204 2.797 2.527 1.225c.433.209.751.598.874
- 1.06.124.465.043.96-.227 1.357l-1.575 2.322 1.575 2.323c.269.398.351.892.227 1.356-.123.464-.441.852-.874 1.062l-
-2.527 1.225.204 2.8c.034.478-.143.946-.48 1.288-.313.311-.734.484-1.172.484-.038 0-.079-.002-.116-.004l-2.8-.204-1
-.225 2.527c-.209.433-.598.751-1.062.874-.139.04-.284.057-.428.057z"/><circle fill="#732700" cx="18" cy="14" r="7"/
-></g>`
+import { emojiMap } from './emojis'
 
 type Path = z.infer<typeof Path>
 const Path = z.object({
     type: z.literal("path"),
     d: z.string(),
-    fill: z.string(),
+    fill: z.string().optional(),
 })
 
 type Circle = z.infer<typeof Circle>
@@ -27,13 +16,24 @@ const Circle = z.object({
     cx: z.number(),
     cy: z.number(),
     r: z.number(),
-    fill: z.string(),
+    fill: z.string().optional(),
 })
+
+type Group = z.infer<typeof Group>
+const Group = z.object({
+    type: z.literal("g"),
+    fill: z.string().optional(),
+    get kids() {
+        return z.array(Element)
+    }
+})
+
 
 
 type types = Element["type"]
 type Element = z.infer<typeof Element>
-const Element = z.union([Path, Circle])
+const Element = z.union([Group, Path, Circle])
+
 
 type Emoji = z.infer<typeof Emoji>
 const Emoji = z.object({
@@ -41,78 +41,87 @@ const Emoji = z.object({
     y: z.number(),
     scale: z.number(),
     rotate: z.number(),
-    elements: z.array(Element),
+    emoji: z.string()
 })
 
-type From = {
-    [t in types]: (attrs: Record<string, string>) => Extract<Element, { type: t }>
+type Open = {
+    [t in types]: (args: Omit<Extract<Element, { type: t }>, "type">) => void
 }
 
-const FromSvg: From = {
-    circle: ({ cx, cy, r, fill, stroke, strokeWidth }) => ({
-        type: "circle",
-        cx: Number(cx),
-        cy: Number(cy),
-        r: Number(r),
-        fill: fill,
-        stroke: stroke,
-        strokeWidth: strokeWidth ? Number(strokeWidth) : undefined,
-    }),
-
-    path: ({ d, fill, stroke, strokeWidth }) => ({
-        type: "path",
-        d: d,
-        fill: fill,
-        stroke: stroke,
-        strokeWidth: strokeWidth ? Number(strokeWidth) : undefined,
-    }),
+type Close = {
+    [t in types]: () => void
 }
 
-interface Tag {
-    tag: types
-    attributes: Record<string, string>
+function hex(s: string | undefined): string | undefined {
+    if (!s) return
+    const res = s.replace('#', '')
+    assert([3, 6].includes(res.length), `Color ${s} is not valid hex`)
+    return res.length === 3 ? res.split('').map(c => c + c).join('') : res
 }
 
-function parseSvg(svg: string): Tag[] {
-    const tag = /<(\w+)([^>]*)\/?>/g
-    const attr = /(\w+(?:-\w+)?)\s*=\s*(["'])([\s\S]*?)\2/g
-    const tags = svg.replaceAll('\n', '').matchAll(tag)
-    return Array.from(tags).map(tag => {
-        return {
-            tag: tag[1] as types,
-            attributes: Array.from(tag[2].matchAll(attr)).reduce((acc, [, name, , value]) => {
-                acc[name] = value
-                return acc
-            }, {} as Record<string, string>),
+export function fromSvg(svg: string): Group[] {
+
+    const res: Group[] = [{
+        type: "g",
+        kids: [],
+    }]
+
+    function push(e: Element) {
+        res[res.length - 1].kids.push({ ...e, fill: hex(e.fill) })
+    }
+
+    const open: Open = {
+        circle(attrs) {
+            push({ type: "circle", ...attrs })
+        },
+        path(attrs) {
+            push({ type: "path", ...attrs })
+        },
+        g({ fill }) {
+            res.push({
+                type: "g",
+                fill: hex(fill),
+                kids: [],
+            })
+        },
+    }
+
+    const close: Close = {
+        circle() { },
+        path() { },
+        g() {
+            res.push({
+                type: "g",
+                kids: [],
+            })
+        },
+    }
+
+    const p = sax.parser(true)
+
+    p.onopentag = ({ name, attributes }) => {
+        if (!(name in open)) {
+            console.log('unknown tag', name)
+            return
         }
-    })
-}
+        open[name as types](attributes as any)
+    }
 
-export function fromSvg(svg: string): Element[] {
-    return parseSvg(svg).map(tag => {
-        const fn = FromSvg[tag.tag]
-        if (!fn) {
-            console.warn(`Unsupported tag: <${tag.tag}>`)
-            return null
+    p.onclosetag = (name) => {
+        if (!(name in close)) {
+            console.log('unknown tag', name)
+            return
         }
-        return fn(tag.attributes)
-    }).filter((e): e is Element => e !== null)
+        close[name as types]()
+    }
+
+    p.write(svg).close()
+
+
+
+    return res
 }
 
-
-type To = {
-    [t in types]: (args: Extract<Element, { type: t }>) => string
-}
-
-const ToTikz: To = {
-    circle: ({ cx, cy, r, fill }) => {
-        return `\\fill [fill=${fill}] (${cx}, ${cy}) circle (${r});`
-    },
-
-    path: ({ d, fill }) => {
-        return `\\fill [fill=${fill}] svg {${d}};`
-    },
-}
 
 type Page = z.infer<typeof Page>
 const Page = z.object({
@@ -120,6 +129,7 @@ const Page = z.object({
     textBg: z.string(),
     text: z.array(z.string()),
     emojis: z.array(Emoji),
+    jpgBase64: z.string().max(256_000)
 })
 
 type Book = z.infer<typeof Book>
@@ -132,17 +142,60 @@ function colorMap(colors: Set<string>) {
     return Object.fromEntries(Array.from(colors).map((c, i) => [c, i]))
 }
 
+function getColors(e: Element): string[] {
+    if (e.type === 'g') return [e.fill, ...e.kids.flatMap(getColors)]
+    return [e.fill]
+}
+
 function toTex(book: Book) {
     const pages = book.pages
 
+    const emojis = Object.fromEntries(
+        pages.flatMap(p => p.emojis.map(e =>
+            [e.emoji, {
+                ...e,
+                emoji: fromSvg(emojiMap[e.emoji])
+            }]
+        )))
+
     const gradColors = pages.flatMap<string>(p => p.gradient)
     const textBgColors = pages.map(p => p.textBg)
-    const emojiColors = pages.flatMap(p => p.emojis.flatMap(es => es.elements.map<string>(e => e.fill)))
+    const emojiColors = Object.values(emojis).flatMap(es => es.emoji.flatMap(getColors))
     const colors = colorMap(new Set<string>([
         ...gradColors,
         ...textBgColors,
         ...emojiColors
     ]))
+
+    type To = {
+        [t in types]: (args: Extract<Element, { type: t }>) => string
+    }
+
+    function fillStr(fill?: string) {
+        if (!fill) return ''
+        assert(fill in colors, `Color ${fill} not in ${Object.keys(colors)}`)
+        return `fill=c${colors[fill]}`
+    }
+
+    const ToTikz: To = {
+        circle({ cx, cy, r, fill }) {
+            return `\\fill[${fillStr(fill)}] (${cx}, ${cy}) circle (${r});`
+        },
+
+        path({ d, fill }) {
+            return `\\fill[${fillStr(fill)}] svg {${d}};`
+        },
+
+        g({ fill, kids }) {
+            return [
+                `\\begin{scope}[${fillStr(fill)}]`,
+                ...kids.map(e => ToTikz[e.type](e as any)),
+                `\\end{scope}`
+            ].join('\n')
+        }
+    }
+
+    console.log('Colors used:', colors)
 
     return String.raw`
 \documentclass[a5paper, oneside]{article}
@@ -179,14 +232,13 @@ ${Object.entries(colors).map(([color, i]) => `\\definecolor{c${i}}{HTML}{${color
 
 ${book.pages.map((page, i) => {
         const [c1, c2] = page.gradient
-        const es = page.emojis.map(emoji => String.raw`
-        \begin{scope}[x=1pt, y=1pt, xshift=${emoji.x}, scale=${emoji.scale}, yscale=-1, yshift=${emoji.y}, rotate=${emoji.rotate}]
-            ${emoji.elements.map(e => ToTikz[e.type]({
-            ...e,
-            fill: `c${colors[e.fill]}`,
-        } as Element as any)).join('\n')}
-        \end{scope}
-        `).join('\n')
+        const es = page.emojis.map(({ emoji, x, y, scale, rotate }) => String.raw`
+        \begin{scope}[x=1pt, y=1pt, xshift=${x}, scale=${scale}, yscale=-1, yshift=${y}, rotate=${rotate}]
+            ${emojis[emoji].emoji.map(e => {
+            console.log(e)
+            return ToTikz[e.type](e as any)
+        }).join('\n')}
+        \end{scope}`).join('\n')
 
         return String.raw`
     \begin{tikzpicture}[remember picture, overlay]
@@ -239,9 +291,12 @@ ${book.pages.map((page, i) => {
 }
 
 if (require.main === module) {
+    const buffer = await Bun.file('img.jpg').arrayBuffer()
+    const jpgBase64 = Buffer.from(buffer).toString('base64')
     const book: Book = {
         pages: [
             {
+                jpgBase64,
                 gradient: ['#8B4513', '#FFD1E0'],
                 textBg: '#FFF3E6',
                 emojis: [
@@ -250,7 +305,7 @@ if (require.main === module) {
                         y: 20,
                         scale: 1.8,
                         rotate: -15,
-                        elements: fromSvg(emoji)
+                        emoji: '🌸'
                     }
                 ],
                 text: [

@@ -16,10 +16,15 @@ function toTex(book: Book) {
     return String.raw`
 \documentclass[a5paper, oneside]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[margin=1.5cm]{geometry}
+\usepackage[
+    left=1cm,
+    right=1cm,
+    top=1cm, 
+    bottom=2cm
+]{geometry}
 \usepackage{tikz}
+\usetikzlibrary{svg.path}
 
-% Define Pastel Colors
 ${Object.entries(colors).map(([color, i]) => `\\definecolor{c${i}}{HTML}{${color.replace('#', '')}}`).join('\n')}
 
 \begin{document}
@@ -36,7 +41,9 @@ ${book.pages.map((page, i) => {
         (current page.south west) rectangle ([xshift=148.5mm]current page.north east);
     \end{tikzpicture}
 
-    Page ${i + 1}
+    \vspace*{\fill}
+    Page ${i + 2}
+    \vspace*{\fill}
     
     \newpage
     
@@ -45,7 +52,16 @@ ${book.pages.map((page, i) => {
     ([xshift=-148.5mm]current page.south west) rectangle (current page.north east);
     \end{tikzpicture}
     
-    Page ${i + 2}
+    \vspace*{\fill}
+        \begin{tikzpicture}
+            \clip[
+                xshift=-175, 
+                yshift=175,
+                scale=350, 
+                yscale=-1] svg {M 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05 C 0.76 0.00 0.54 0.02 0.41 0.05 C 0.28 0.08 0.12 0.10 0.06 0.24 C 0.00 0.37 0.00 0.73 0.05 0.85 C 0.11 0.97 0.26 0.94 0.39 0.96 C 0.51 0.98 0.71 1.00 0.80 0.96 C 0.90 0.92 0.94 0.82 0.97 0.72 C 1.00 0.62 0.99 0.48 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05};
+            \node at(0, 0) {\includegraphics[width=12cm]{img.jpg}};
+        \end{tikzpicture}
+    \vspace*{\fill}    
     
     \newpage
 `

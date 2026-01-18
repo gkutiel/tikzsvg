@@ -25,6 +25,14 @@ function toTex(book: Book) {
 \usepackage{tikz}
 \usetikzlibrary{svg.path}
 
+\usepackage{fancyhdr}
+
+\fancypagestyle{bigpagenumbers}{
+    \fancyhf{} 
+    \renewcommand{\headrulewidth}{0pt} 
+    \fancyfoot[C]{\Huge\thepage} 
+}
+
 \usepackage{polyglossia}
 \setmainlanguage{hebrew}
 \newfontfamily\hebrewfont[
@@ -38,7 +46,8 @@ ${Object.entries(colors).map(([color, i]) => `\\definecolor{c${i}}{HTML}{${color
 
 \begin{document}
 
-\thispagestyle{empty}
+\pagestyle{bigpagenumbers}
+
 \mbox{} 
 \newpage
 

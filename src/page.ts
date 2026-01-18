@@ -276,19 +276,23 @@ ${book.pages.map((page, i) => {
 \begin{tikzpicture}[remember picture, overlay]
     \shade[shading=axis, bottom color=c${colors[c1]}, top color=c${colors[c2]}, shading angle=45] 
     ([xshift=-148.5mm]current page.south west) rectangle (current page.north east);
-    ${esImage}
 \end{tikzpicture}
 
 \vspace*{\fill}
-    \begin{tikzpicture}
-        \clip[
-            xshift=-190, 
-            yshift=190,
-            scale=380, 
-            yscale=-1] svg {M 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05 C 0.76 0.00 0.54 0.02 0.41 0.05 C 0.28 0.08 0.12 0.10 0.06 0.24 C 0.00 0.37 0.00 0.73 0.05 0.85 C 0.11 0.97 0.26 0.94 0.39 0.96 C 0.51 0.98 0.71 1.00 0.80 0.96 C 0.90 0.92 0.94 0.82 0.97 0.72 C 1.00 0.62 0.99 0.48 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05};
-        \node[opacity=0.8] {\includegraphics[width=13.1cm]{img.jpg}};
-    \end{tikzpicture}
-\vspace*{\fill}    
+\begin{tikzpicture}
+\begin{scope}
+\clip[
+    xshift=-190, 
+    yshift=190,
+    scale=380, 
+    yscale=-1] svg {M 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05 C 0.76 0.00 0.54 0.02 0.41 0.05 C 0.28 0.08 0.12 0.10 0.06 0.24 C 0.00 0.37 0.00 0.73 0.05 0.85 C 0.11 0.97 0.26 0.94 0.39 0.96 C 0.51 0.98 0.71 1.00 0.80 0.96 C 0.90 0.92 0.94 0.82 0.97 0.72 C 1.00 0.62 0.99 0.48 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05};
+    \node[opacity=0.8] {\includegraphics[width=13.1cm]{img.jpg}};
+\end{scope}
+${esImage}
+\end{tikzpicture}
+\vspace*{\fill}
+    
+
 
 \newpage
 `
@@ -300,22 +304,6 @@ ${book.pages.map((page, i) => {
 if (require.main === module) {
     const buffer = await Bun.file('img.jpg').arrayBuffer()
     const jpgBase64 = Buffer.from(buffer).toString('base64')
-    const es = [
-        {
-            x: 10,
-            y: 20,
-            scale: 1.8,
-            rotate: -15,
-            emoji: '🌸'
-        },
-        {
-            x: 300,
-            y: 10,
-            scale: 2.1,
-            rotate: 15,
-            emoji: '🌼'
-        },
-    ]
 
     const book: Book = {
         pages: [
@@ -323,7 +311,46 @@ if (require.main === module) {
                 jpgBase64,
                 gradient: ['#8B4513', '#FFD1E0'],
                 textBg: '#FFF3E6',
-                emojis: { text: es, image: es },
+                emojis: {
+                    text: [{
+                        x: 10,
+                        y: 20,
+                        scale: 1.8,
+                        rotate: -15,
+                        emoji: '🌸'
+                    }, {
+                        x: 300,
+                        y: 220,
+                        scale: 2.1,
+                        rotate: 15,
+                        emoji: '🌼'
+                    }, {
+                        x: 10,
+                        y: 280,
+                        scale: 1.7,
+                        rotate: -10,
+                        emoji: '🌹'
+                    }],
+                    image: [{
+                        x: -170,
+                        y: -130,
+                        scale: 1.8,
+                        rotate: -15,
+                        emoji: '🌺'
+                    }, {
+                        x: 130,
+                        y: -120,
+                        scale: 2.2,
+                        rotate: 15,
+                        emoji: '🌻'
+                    }, {
+                        x: 100,
+                        y: 80,
+                        scale: 2.3,
+                        rotate: 10,
+                        emoji: '🌷'
+                    }]
+                },
                 text: [
                     'שלי בת השש-עשרה רצה למטבח.',
                     'היא רצתה עוגיות שוקולד טעימות!',

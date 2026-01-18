@@ -182,6 +182,7 @@ export namespace tikzsvg {
 
 
 }
+
 if (module === require.main) {
     const es = tikzsvg.fromSvg(emoji)
     const svg = tikzsvg.toSvg(es)

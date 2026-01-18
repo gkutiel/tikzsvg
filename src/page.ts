@@ -67,7 +67,7 @@ export function fromSvg(svg: string): Group[] {
     }]
 
     function push(e: Element) {
-        res[res.length - 1].kids.push({ ...e, fill: hex(e.fill) })
+        res[res.length - 1]?.kids.push({ ...e, fill: hex(e.fill) })
     }
 
     const open: Open = {
@@ -135,36 +135,38 @@ const Page = z.object({
     jpgBase64: z.string().max(256_000)
 })
 
-type Book = z.infer<typeof Book>
-const Book = z.object({
+export type Book = z.infer<typeof Book>
+export const Book = z.object({
     pages: z.array(Page),
 })
 
-function colorMap(colors: Set<string>) {
+function colorMap(colors: Set<string | undefined>) {
     colors.delete(undefined)
-    return Object.fromEntries(Array.from(colors).map((c, i) => [c, i]))
+    return Object.fromEntries(Array.from(colors).filter((c): c is string => c !== undefined).map((c, i) => [c, i]))
 }
 
-function getColors(e: Element): string[] {
+function getColors(e: Element): (string | undefined)[] {
     if (e.type === 'g') return [e.fill, ...e.kids.flatMap(getColors)]
     return [e.fill]
 }
 
-function toTex(book: Book) {
+export function toTex(book: Book) {
     const pages = book.pages
 
     const emojis = Object.fromEntries(
-        pages.flatMap(p => [...p.emojis.text, ...p.emojis.image].map(e =>
-            [e.emoji, {
+        pages.flatMap(p => [...p.emojis.text, ...p.emojis.image].map(e => {
+            const svg = emojiMap[e.emoji]
+            return [e.emoji, {
                 ...e,
-                emoji: fromSvg(emojiMap[e.emoji])
+                emoji: fromSvg(svg!)
             }]
+        }
         )))
 
-    const gradColors = pages.flatMap<string>(p => p.gradient)
+    const gradColors = pages.flatMap(p => p.gradient)
     const textBgColors = pages.map(p => p.textBg)
     const emojiColors = Object.values(emojis).flatMap(es => es.emoji.flatMap(getColors))
-    const colors = colorMap(new Set<string>([
+    const colors = colorMap(new Set([
         ...gradColors,
         ...textBgColors,
         ...emojiColors
@@ -233,13 +235,19 @@ ${Object.entries(colors).map(([color, i]) => `\\definecolor{c${i}}{HTML}{${color
 
 ${book.pages.map((page, i) => {
         const [c1, c2] = page.gradient
+
+        assert(c1 && c2, `Gradient colors ${page.gradient} must be defined in page ${i}`)
+
         function es(es: Emoji[]) {
-            return es.map(({ emoji, x, y, scale, rotate }) => String.raw`
+            return es.map(({ emoji, x, y, scale, rotate }) => {
+                assert(emoji && emoji in emojis, `Emoji ${emoji} not found`)
+
+                return String.raw`
             \begin{scope}[x=1pt, y=1pt, xshift=${x}, scale=${scale}, yscale=-1, yshift=${y}, rotate=${rotate}]
-                ${emojis[emoji].emoji.map(e => {
-                return ToTikz[e.type](e as any)
-            }).join('\n')}
-            \end{scope}`).join('\n')
+                ${emojis[emoji]?.emoji.map(e => {
+                    return ToTikz[e.type](e as any)
+                }).join('\n')}
+            \end{scope}`}).join('\n')
         }
 
         const esText = es(page.emojis.text)
@@ -301,66 +309,3 @@ ${esImage}
 \end{document}`
 }
 
-if (require.main === module) {
-    const buffer = await Bun.file('img.jpg').arrayBuffer()
-    const jpgBase64 = Buffer.from(buffer).toString('base64')
-
-    const book: Book = {
-        pages: [
-            {
-                jpgBase64,
-                gradient: ['#8B4513', '#FFD1E0'],
-                textBg: '#FFF3E6',
-                emojis: {
-                    text: [{
-                        x: 10,
-                        y: 20,
-                        scale: 1.8,
-                        rotate: -15,
-                        emoji: '🌸'
-                    }, {
-                        x: 300,
-                        y: 220,
-                        scale: 2.1,
-                        rotate: 15,
-                        emoji: '🌼'
-                    }, {
-                        x: 10,
-                        y: 280,
-                        scale: 1.7,
-                        rotate: -10,
-                        emoji: '🌹'
-                    }],
-                    image: [{
-                        x: -170,
-                        y: -130,
-                        scale: 1.8,
-                        rotate: -15,
-                        emoji: '🌺'
-                    }, {
-                        x: 130,
-                        y: -120,
-                        scale: 2.2,
-                        rotate: 15,
-                        emoji: '🌻'
-                    }, {
-                        x: 100,
-                        y: 80,
-                        scale: 2.3,
-                        rotate: 10,
-                        emoji: '🌷'
-                    }]
-                },
-                text: [
-                    'שלי בת השש-עשרה רצה למטבח.',
-                    'היא רצתה עוגיות שוקולד טעימות!',
-                    'אבל אוי ואבוי!',
-                    'הקופסה הייתה ריקה לגמרי!'
-                ],
-            },
-        ]
-    }
-
-    const tex = toTex(book)
-    require('fs').writeFileSync('output.tex', tex)
-}

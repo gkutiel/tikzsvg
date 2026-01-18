@@ -30,8 +30,8 @@ function toTex(book: Book) {
 \newfontfamily\hebrewfont[
     Script=Hebrew,
     Path=./,                
-    BoldFont={Alef-Bold.ttf} 
-]{Alef-Bold.ttf}
+    BoldFont={Fredoka-Bold.ttf} 
+]{Fredoka-Bold.ttf}
 
 
 ${Object.entries(colors).map(([color, i]) => `\\definecolor{c${i}}{HTML}{${color.replace('#', '')}}`).join('\n')}
@@ -62,6 +62,7 @@ ${book.pages.map((page, i) => {
 \begin{center}
     \begin{minipage}{10cm}
         \Huge 
+        \raggedleft
         ${page.text.map(line => line.trim()).join('\\\\')}
     \end{minipage}
 \end{center}

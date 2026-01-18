@@ -4,6 +4,7 @@ WORKDIR /app
 
 RUN curl -fsSL https://bun.com/install | bash
 
+COPY Fredoka-Bold.ttf .
 COPY package.json .
 COPY bun.lock .
 RUN ~/.bun/bin/bun i --production

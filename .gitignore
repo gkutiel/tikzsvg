@@ -10,7 +10,6 @@ dist
 *.aux
 *.svg
 *.jpg
-*.ttf
 *.xdv
 
 book.json

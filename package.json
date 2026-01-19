@@ -1,6 +1,6 @@
 {
   "name": "tikzify",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "module": "dist/tikzsvg.es.js",
   "types": "dist/tikzsvg.d.ts",

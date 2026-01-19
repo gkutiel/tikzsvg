@@ -1,9 +1,14 @@
 
+import assert from "assert"
 import { z } from "zod"
+import { colorMap, defineColors, Emoji, fromSvg, getColors, svgTex } from "./common"
+import { emojiMap } from "./emojis"
 
 
 export type Cover = z.infer<typeof Cover>
 export const Cover = z.object({
+    gradient: z.array(z.string()).length(2),
+    emoji: Emoji,
     title: z.string().max(64),
     author: z.string().max(32),
     tagline: z.string().max(128),
@@ -11,16 +16,26 @@ export const Cover = z.object({
     testimonial_quote: z.string().max(256),
     testimonial_name: z.string().max(64),
     slogan: z.string().max(64),
+    jpgBase64: z.string().max(256_000),
 })
 
-export function tex({
+export function coverTex({
+    gradient,
+    emoji,
     title,
     author,
     tagline,
     blurb,
     testimonial_quote,
     testimonial_name,
-    slogan }: Cover) {
+    slogan
+}: Cover) {
+
+    const [c1, c2] = gradient
+    assert(c1 && c2, "Gradient must have two colors")
+    const el = fromSvg(emojiMap[emoji.emoji]!)
+    const colors = colorMap(new Set([...gradient, ...el.flatMap(getColors)]))
+
     return String.raw`
 \documentclass[17pt]{extarticle}
 \usepackage[a4paper, landscape, margin=0cm]{geometry}
@@ -43,9 +58,10 @@ BoldFont=*-Bold
 \pagestyle{empty}
 
 \begin{document}
+${defineColors(colors)}
 
 \begin{tikzpicture}[remember picture, overlay]
-\shade [shading=axis, shading angle=45, left color=orange!90, right color=orange!20] 
+\shade [shading=axis, shading angle=45, left color=c${colors[c1]}, right color=c${colors[c2]}] 
 (current page.south west) rectangle (current page.north east);
 
 \fill[
@@ -130,11 +146,14 @@ ${author}
 \begin{minipage}[c][0.7\textheight]{\textwidth}
 \centering
 \begin{tikzpicture}
+\begin{scope}
 \clip[
 yshift=-170,
 xshift=-170,
 scale=340] svg "M 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05 C 0.76 0.00 0.54 0.02 0.41 0.05 C 0.28 0.08 0.12 0.10 0.06 0.24 C 0.00 0.37 0.00 0.73 0.05 0.85 C 0.11 0.97 0.26 0.94 0.39 0.96 C 0.51 0.98 0.71 1.00 0.80 0.96 C 0.90 0.92 0.94 0.82 0.97 0.72 C 1.00 0.62 0.99 0.48 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05";
-\node[opacity=.75] at (0,0) {\includegraphics[width=12cm]{img.jpg}};
+\node[opacity=.75] at (0,0) {\includegraphics[width=12cm]{cover.jpg}};
+\end{scope}
+${svgTex(emoji, el, colors)}
 \end{tikzpicture}
 \end{minipage}
 \end{minipage}
@@ -143,20 +162,3 @@ scale=340] svg "M 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05 C 0.76 0.00 0.54 0.0
 `
 }
 
-if (module === require.main) {
-    const cover: Cover = {
-        title: "זאת הכותרת",
-        author: "המחבר",
-        tagline: "שלום לכולם",
-        blurb: [
-            "כתובה לדוגמה זו מיועדת להדגים כיצד ניתן ליצור דף שער בסגנון מסוים באמצעות \\LaTeX\\ ו-TikZ.",
-            "הטקסט כתוב בעברית וממוקם בצורה מתאימה בתוך המסגרת.",
-            "ניתן לשנות את התוכן, הגופנים והעיצוב לפי הצורך."
-        ],
-        testimonial_quote: "ספר מרתק ומעורר השראה שמשנה את הפרספקטיבה על החיים",
-        testimonial_name: "שרה כהן, מבקרת ספרות",
-        slogan: 'כִּי לִיצֹר סִפּוּר זֶה לֹא סִפּוּר גָּדוֹל',
-    }
-    const fs = await import("node:fs/promises")
-    await fs.writeFile("cover.tex", tex(cover))
-}

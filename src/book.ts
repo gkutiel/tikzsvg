@@ -128,7 +128,7 @@ ${esImage}
 \shade[shading=axis, bottom color=c${colors[c1]}, top color=c${colors[c2]}, shading angle=45] 
 (current page.south west) rectangle ([xshift=148.5mm]current page.north east);
 \fill[
-opacity=0.5,
+opacity=0.2,
 color=c${colors[page.textBg]},
 yshift=-20,
 xscale=380,

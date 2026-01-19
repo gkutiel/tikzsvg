@@ -1,0 +1,27 @@
+name: Publish Package
+on:
+  release:
+    types: [published] # Triggers when you create a "Release" on GitHub
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # This is the "Key" for Trusted Publishing
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "[https://registry.npmjs.org](https://registry.npmjs.org)"
+
+      - name: Install Dependencies
+        run: npm install
+
+      # We use --provenance to link the package to this GitHub Action
+      - name: Publish to npm
+        run: npm publish --provenance --access public

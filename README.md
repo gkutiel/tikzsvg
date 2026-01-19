@@ -1,73 +1,128 @@
-# React + TypeScript + Vite
+# tikzsvg
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Generate beautiful PDF books with emoji SVG overlays and custom backgrounds using XeLaTeX and TikZ.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 📚 Create multi-page PDF books from JSON input
+- 🎨 Gradient backgrounds with customizable colors
+- 🖼️ Embed images with custom shaped clipping paths
+- ✨ SVG emoji overlays with precise positioning, scaling, and rotation
+- 🌐 RTL (right-to-left) and LTR (left-to-right) text support
+- 🔤 Hebrew text support with Fredoka-Bold font
+- 📄 A5 paper format with page numbering
 
-## React Compiler
+## Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [Bun](https://bun.sh) runtime
+- XeLaTeX (from TeX Live or similar distribution)
+- `Fredoka-Bold.ttf` font file in the project root
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+bun install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Usage
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Server Mode
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Start the HTTP server:
+
+```bash
+bun --hot src/server.ts
 ```
+
+Send a POST request with JSON book data:
+
+```bash
+curl http://localhost:3000/ \
+  -H "Content-Type: application/json" \
+  -d @book.json \
+  -o output.pdf
+```
+
+### Book JSON Format
+
+```json
+{
+  "dir": "rtl",
+  "pages": [
+    {
+      "gradient": ["#8B4513", "#FFD1E0"],
+      "textBg": "#FFF3E6",
+      "text": [
+        "Line 1 of text",
+        "Line 2 of text"
+      ],
+      "emojis": {
+        "text": [
+          {
+            "x": 10,
+            "y": 20,
+            "scale": 1.8,
+            "rotate": -15,
+            "emoji": "🍄"
+          }
+        ],
+        "image": [
+          {
+            "x": -170,
+            "y": -130,
+            "scale": 1.8,
+            "rotate": -15,
+            "emoji": "🌺"
+          }
+        ]
+      },
+      "jpgBase64": "base64-encoded-image-data"
+    }
+  ]
+}
+```
+
+## API Reference
+
+### Book Schema
+
+- `dir`: Text direction (`"rtl"` or `"ltr"`)
+- `pages`: Array of page objects
+
+### Page Schema
+
+- `gradient`: Array of two hex colors for background gradient
+- `textBg`: Hex color for text background overlay
+- `text`: Array of text lines to display
+- `emojis.text`: Emoji overlays for text pages
+- `emojis.image`: Emoji overlays for image pages
+- `jpgBase64`: Base64-encoded JPEG image (max 256KB)
+
+### Emoji Schema
+
+- `x`, `y`: Position coordinates in points
+- `scale`: Scale factor
+- `rotate`: Rotation angle in degrees
+- `emoji`: Unicode emoji character
+
+## How It Works
+
+1. Receives book JSON via HTTP POST
+2. Parses and validates input using Zod schemas
+3. Converts emoji to SVG paths using pre-defined emoji map
+4. Generates XeLaTeX document with TikZ graphics
+5. Runs XeLaTeX twice to resolve coordinate references
+6. Returns compiled PDF
+
+## Development
+
+The project uses:
+- **Bun** for runtime and package management
+- **TypeScript** for type safety
+- **Zod** for schema validation
+- **SAX** for SVG parsing
+- **p-queue** for sequential PDF generation
+
+## License
+
+MIT

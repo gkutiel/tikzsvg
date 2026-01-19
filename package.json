@@ -2,8 +2,7 @@
   "name": "tikzify",
   "version": "0.0.10",
   "type": "module",
-  "module": "dist/tikzsvg.es.js",
-  "types": "dist/tikzsvg.d.ts",
+  "exports": "./src/index.ts",
   "files": [
     "src"
   ],

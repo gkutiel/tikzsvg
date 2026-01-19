@@ -7,7 +7,7 @@ export const Cover = z.object({
     title: z.string().max(64),
     author: z.string().max(32),
     tagline: z.string().max(128),
-    blurb: z.string().max(512),
+    blurb: z.array(z.string().max(512)).max(3),
     testimonial_quote: z.string().max(256),
     testimonial_name: z.string().max(64),
     slogan: z.string().max(64),
@@ -24,6 +24,7 @@ export function tex({
     return String.raw`
 \documentclass[17pt]{extarticle}
 \usepackage[a4paper, landscape, margin=0cm]{geometry}
+\usepackage{setspace}
 \usepackage{tikz}
 \usetikzlibrary{svg.path}
 \usetikzlibrary{calc}
@@ -72,7 +73,10 @@ rectangle ++(-0.45\paperwidth, -0.6\paperheight);
 
 \vspace{.5cm}
 \scriptsize
-${blurb}
+\begin{spacing}{1.5}
+\setlength{\parskip}{.8em}
+${blurb.join('\n\n')}
+\end{spacing}
 \vspace{\fill}
 
 \vspace{0.5cm}
@@ -144,7 +148,11 @@ if (module === require.main) {
         title: "זאת הכותרת",
         author: "המחבר",
         tagline: "שלום לכולם",
-        blurb: "כתובה לדוגמה זו מיועדת להדגים כיצד ניתן ליצור דף שער בסגנון מסוים באמצעות \\LaTeX\\ ו-TikZ. הטקסט כתוב בעברית וממוקם בצורה מתאימה בתוך המסגרת. ניתן לשנות את התוכן, הגופנים והעיצוב לפי הצורך.",
+        blurb: [
+            "כתובה לדוגמה זו מיועדת להדגים כיצד ניתן ליצור דף שער בסגנון מסוים באמצעות \\LaTeX\\ ו-TikZ.",
+            "הטקסט כתוב בעברית וממוקם בצורה מתאימה בתוך המסגרת.",
+            "ניתן לשנות את התוכן, הגופנים והעיצוב לפי הצורך."
+        ],
         testimonial_quote: "ספר מרתק ומעורר השראה שמשנה את הפרספקטיבה על החיים",
         testimonial_name: "שרה כהן, מבקרת ספרות",
         slogan: 'כִּי לִיצֹר סִפּוּר זֶה לֹא סִפּוּר גָּדוֹל',

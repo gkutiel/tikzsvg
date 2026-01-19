@@ -1,7 +1,7 @@
 import { $ } from "bun"
 import { mkdir, writeFile } from "node:fs/promises"
 import PQueue from "p-queue"
-import { Book, toTex } from "./page"
+import { Book, toTex } from "./book"
 
 const q = new PQueue({ concurrency: 1 })
 const server = Bun.serve({

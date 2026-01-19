@@ -1,7 +1,8 @@
 name: Publish Package
 on:
-  release:
-    types: [published] # Triggers when you create a "Release" on GitHub
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-publish:

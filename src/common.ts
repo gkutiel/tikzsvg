@@ -4,18 +4,7 @@ import { z } from 'zod'
 
 export const gradient = z.array(z.string()).length(2)
 
-export type Transform = z.infer<typeof Transform>
-export const Transform = z.object({
-    x: z.number(),
-    y: z.number(),
-    scale: z.number(),
-    rotate: z.number(),
-})
-
-export type Emoji = z.infer<typeof Emoji>
-export const Emoji = Transform.extend({
-    emoji: z.string().max(8)
-})
+export const Emoji = z.string().max(8)
 
 type Path = z.infer<typeof Path>
 const Path = z.object({
@@ -162,6 +151,13 @@ export const toTikz: To = {
 
 export function defineColors(colors: Record<string, number>) {
     return Object.entries(colors).map(([color, i]) => `\\definecolor{c${i}}{HTML}{${color.replace('#', '')}}`).join('\n')
+}
+
+export interface Transform {
+    x: number
+    y: number
+    scale: number
+    rotate: number
 }
 
 export function svgTex({ x, y, scale, rotate }: Transform, es: Element[], colors: Record<string, number>) {

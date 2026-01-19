@@ -1,6 +1,6 @@
 import assert from 'assert'
 import z from 'zod'
-import { colorMap, defineColors, Emoji, fromSvg, getColors, gradient, svgTex } from './common'
+import { colorMap, defineColors, Emoji, fromSvg, getColors, gradient, svgTex, type Transform } from './common'
 import { emojiMap } from './emojis'
 
 
@@ -10,8 +10,8 @@ const Page = z.object({
     textBg: z.string(),
     text: z.array(z.string()),
     emojis: z.object({
-        text: z.array(Emoji),
-        image: z.array(Emoji)
+        text: z.array(Emoji).length(3),
+        image: z.array(Emoji).length(3),
     }),
     jpgBase64: z.string().max(256_000)
 })
@@ -22,22 +22,30 @@ export const Book = z.object({
     pages: z.array(Page),
 })
 
+const TRANSFORMS_TEXT: Transform[] = [
+    { x: 10, y: 15, scale: 2.3, rotate: -15, },
+    { x: 300, y: 220, scale: 2.1, rotate: 15, },
+    { x: 10, y: 280, scale: 1.7, rotate: -10, },
+]
+
+const TRANSFORMS_IMAGE: Transform[] = [
+    { x: -170, y: -120, scale: 1.8, rotate: -15 },
+    { x: 130, y: -120, scale: 2.2, rotate: 15 },
+    { x: 100, y: 80, scale: 2.3, rotate: 10 }
+]
+
 export function bookTex(book: Book) {
     const pages = book.pages
 
-    const emojis = Object.fromEntries(
-        pages.flatMap(p => [...p.emojis.text, ...p.emojis.image].map(e => {
-            const svg = emojiMap[e.emoji]
-            return [e.emoji, {
-                ...e,
-                emoji: fromSvg(svg!)
-            }]
-        }
-        )))
+    const emojiElements = Object.fromEntries(
+        pages.flatMap(p => [...p.emojis.text, ...p.emojis.image].map(emoji => {
+            const svg = emojiMap[emoji]
+            return [emoji, fromSvg(svg!)]
+        })))
 
     const gradColors = pages.flatMap(p => p.gradient)
     const textBgColors = pages.map(p => p.textBg)
-    const emojiColors = Object.values(emojis).flatMap(es => es.emoji.flatMap(getColors))
+    const emojiColors = Object.values(emojiElements).flatMap(es => es.flatMap(getColors))
     const colors = colorMap(new Set([
         ...gradColors,
         ...textBgColors,
@@ -81,15 +89,16 @@ ${book.pages.map((page, i) => {
 
         assert(c1 && c2, `Gradient colors ${page.gradient} must be defined in page ${i}`)
 
-        function es(es: Emoji[]) {
-            return es.map(({ emoji, x, y, scale, rotate }) => {
-                assert(emoji && emoji in emojis, `Emoji ${emoji} not found`)
-                return svgTex({ x, y, scale, rotate }, emojis[emoji]!.emoji, colors)
+        function emojisTex(emojis: string[], transforms: Transform[]) {
+            assert(emojis.length <= transforms.length)
+            return emojis.map((emoji, i) => {
+                const els = emojiElements[emoji]!
+                return svgTex(transforms[i]!, els, colors)
             }).join('\n')
         }
 
-        const esText = es(page.emojis.text)
-        const esImage = es(page.emojis.image)
+        const esText = emojisTex(page.emojis.text, TRANSFORMS_TEXT)
+        const esImage = emojisTex(page.emojis.image, TRANSFORMS_IMAGE)
         const rtl = book.dir === 'rtl'
 
         const image = String.raw`

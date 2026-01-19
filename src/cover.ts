@@ -12,7 +12,7 @@ export const Cover = z.object({
     title: z.string().max(64),
     author: z.string().max(32),
     tagline: z.string().max(128),
-    blurb: z.array(z.string().max(512)).max(3),
+    blurb: z.string().max(512),
     testimonial_quote: z.string().max(256),
     testimonial_name: z.string().max(64),
     slogan: z.string().max(64),
@@ -92,7 +92,7 @@ rectangle ++(-0.45\paperwidth, -0.6\paperheight);
 \scriptsize
 \begin{spacing}{1.5}
 \setlength{\parskip}{.8em}
-${blurb.join('\n\n')}
+${blurb}
 \end{spacing}
 \vspace{\fill}
 

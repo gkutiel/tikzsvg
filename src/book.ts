@@ -8,7 +8,7 @@ type Page = z.infer<typeof Page>
 const Page = z.object({
     gradient: gradient,
     textBg: z.string(),
-    text: z.array(z.string()),
+    text: z.string().max(1024),
     emojis: z.object({
         text: z.array(Emoji).length(3),
         image: z.array(Emoji).length(3),
@@ -143,7 +143,7 @@ ${esText}
 \begin{minipage}{10cm}
 \Huge 
 \raggedleft
-${page.text.map(line => line.trim()).join('\\\\')}
+${page.text}
 \end{minipage}
 \end{center}
 \vspace*{\fill}

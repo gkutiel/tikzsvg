@@ -2,9 +2,13 @@ import assert from 'assert'
 import sax from 'sax'
 import { z } from 'zod'
 
-export const gradient = z.array(z.string()).length(2)
+export const color = z.string().length(7)
+export const gradient = z.array(color).length(2)
 
 export const Emoji = z.string().max(8)
+
+const langs = ['he', 'en'] as const
+export const Lang = z.enum(langs)
 
 type Path = z.infer<typeof Path>
 const Path = z.object({
@@ -22,6 +26,17 @@ const Circle = z.object({
     fill: z.string().optional(),
 })
 
+const Ellipse = z.object({
+    type: z.literal("ellipse"),
+    cx: z.number(),
+    cy: z.number(),
+    rx: z.number(),
+    ry: z.number(),
+    fill: z.string().optional(),
+})
+
+
+
 type Group = z.infer<typeof Group>
 const Group = z.object({
     type: z.literal("g"),
@@ -33,7 +48,7 @@ const Group = z.object({
 
 type types = Element["type"]
 type Element = z.infer<typeof Element>
-const Element = z.union([Group, Path, Circle])
+const Element = z.union([Group, Path, Circle, Ellipse])
 
 type Open = {
     [t in types]: (args: Omit<Extract<Element, { type: t }>, "type">) => void
@@ -65,6 +80,9 @@ export function fromSvg(svg: string): Group[] {
         circle(attrs) {
             push({ type: "circle", ...attrs })
         },
+        ellipse(attrs) {
+            push({ type: "ellipse", ...attrs })
+        },
         path(attrs) {
             push({ type: "path", ...attrs })
         },
@@ -79,6 +97,7 @@ export function fromSvg(svg: string): Group[] {
 
     const close: Close = {
         circle() { },
+        ellipse() { },
         path() { },
         g() {
             res.push({
@@ -134,6 +153,10 @@ type To = {
 export const toTikz: To = {
     circle({ cx, cy, r, fill }, colors) {
         return `\\fill[${fillStr(fill, colors)}] (${cx}, ${cy}) circle (${r});`
+    },
+
+    ellipse({ cx, cy, rx, ry, fill }, colors) {
+        return `\\fill[${fillStr(fill, colors)}] (${cx}, ${cy}) ellipse (${rx} and ${ry});`
     },
 
     path({ d, fill }, colors) {

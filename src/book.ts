@@ -1,6 +1,6 @@
 import assert from 'assert'
 import z from 'zod'
-import { colorMap, defineColors, Emoji, fromSvg, getColors, gradient, svgTex, type Transform } from './common'
+import { color, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, svgTex, type Transform } from './common'
 import { emojiMap } from './emojis'
 
 
@@ -18,7 +18,16 @@ const Page = z.object({
 
 export type Book = z.infer<typeof Book>
 export const Book = z.object({
-    dir: z.enum(['rtl', 'ltr']),
+    lang: Lang,
+
+    // FIRST PAGE
+    color: color,
+    title: z.string().max(256),
+    author: z.string().max(256),
+    date: z.coerce.date(),
+    heroJpgBase64: z.string().max(256_000),
+
+    // OTHER PAGES
     pages: z.array(Page),
 })
 
@@ -47,6 +56,7 @@ export function bookTex(book: Book) {
     const textBgColors = pages.map(p => p.textBg)
     const emojiColors = Object.values(emojiElements).flatMap(es => es.flatMap(getColors))
     const colors = colorMap(new Set([
+        book.color,
         ...gradColors,
         ...textBgColors,
         ...emojiColors
@@ -81,8 +91,25 @@ ${defineColors(colors)}
 
 \pagestyle{bigpagenumbers}
 
-\mbox{} 
+\pagecolor{c${colors[book.color]}!60}
+
+\vspace*{\fill}
+
+\begin{center}
+\begin{tikzpicture}
+\clip[] (0,0) circle (3.5cm);
+\node[opacity=0.8] at (0,0) {\includegraphics[width=7cm]{hero.jpg}};  
+\end{tikzpicture}
+
+\vspace{1cm}
+\Huge \textbf{${book.title}}\\[1cm]
+\LARGE ${book.author} \\[1cm]
+\normalsize \today \\[2cm]
+\end{center}
+\vspace*{\fill}
+
 \newpage
+\nopagecolor
 
 ${book.pages.map((page, i) => {
         const [c1, c2] = page.gradient
@@ -99,7 +126,7 @@ ${book.pages.map((page, i) => {
 
         const esText = emojisTex(page.emojis.text, TRANSFORMS_TEXT)
         const esImage = emojisTex(page.emojis.image, TRANSFORMS_IMAGE)
-        const rtl = book.dir === 'rtl'
+        const rtl = book.lang === 'he'
 
         const image = String.raw`
 \begin{tikzpicture}[remember picture, overlay]
@@ -149,11 +176,12 @@ ${page.text}
 \vspace*{\fill}
 \newpage
 `
+
         return [
             rtl ? image : text,
             rtl ? text : image,
         ].join('\n\n')
-    })}
+    }).join('\n\n')}
 
 \end{document}`
 }

@@ -46,6 +46,7 @@ async function book(req: Request) {
     const book = Book.parse(body)
 
     const tmp = await tmpDir()
+    await writeFile(`${tmp}/hero.jpg`, Buffer.from(book.heroJpgBase64, 'base64'))
     await Promise.all(book.pages.map(async (page, i) => {
         console.log(`Writing page ${i} jpg`)
         writeFile(`${tmp}/${i}.jpg`, Buffer.from(page.jpgBase64, 'base64'))

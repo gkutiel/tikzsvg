@@ -4,8 +4,8 @@ import { color, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lan
 import { emojiMap } from './emojis'
 
 
-type Page = z.infer<typeof Page>
-const Page = z.object({
+export type Page = z.infer<typeof Page>
+export const Page = z.object({
     gradient: gradient,
     textBg: z.string(),
     text: z.string().max(1024),

@@ -24,7 +24,6 @@ export const Book = z.object({
     color: color,
     title: z.string().max(256),
     author: z.string().max(256),
-    date: z.coerce.date(),
     heroJpgBase64: z.string().max(256_000),
 
     // OTHER PAGES
@@ -90,7 +89,7 @@ ${defineColors(colors)}
 \begin{document}
 
 \pagestyle{bigpagenumbers}
-
+\thispagestyle{empty}
 \pagecolor{c${colors[book.color]}!60}
 
 \vspace*{\fill}
@@ -104,12 +103,12 @@ ${defineColors(colors)}
 \vspace{1cm}
 \Huge \textbf{${book.title}}\\[1cm]
 \LARGE ${book.author} \\[1cm]
-\normalsize \today \\[2cm]
+\normalsize \today
 \end{center}
 \vspace*{\fill}
 
 \newpage
-\nopagecolor
+\setcounter{page}{1}
 
 ${book.pages.map((page, i) => {
         const [c1, c2] = page.gradient

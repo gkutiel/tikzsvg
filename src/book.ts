@@ -13,7 +13,7 @@ export const Page = z.object({
         text: z.array(Emoji).length(3),
         image: z.array(Emoji).length(3),
     }),
-    jpgBase64: z.string().max(256_000)
+    jpgBase64: z.string().max(300_000)
 })
 
 export type Book = z.infer<typeof Book>

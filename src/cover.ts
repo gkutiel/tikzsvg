@@ -16,7 +16,7 @@ export const Cover = z.object({
     testimonial_quote: z.string().max(256),
     testimonial_name: z.string().max(64),
     slogan: z.string().max(64),
-    jpgBase64: z.string().max(256_000),
+    jpgBase64: z.string().max(300_000),
 })
 
 const TRANSFORM: Transform = { x: -220, y: 60, scale: 2.3, rotate: -15 }

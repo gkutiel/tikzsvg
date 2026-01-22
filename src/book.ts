@@ -7,12 +7,9 @@ import { emojiMap } from './emojis'
 export type Page = z.infer<typeof Page>
 export const Page = z.object({
     gradient: gradient,
-    textBg: z.string(),
+    textBackground: z.string(),
     text: z.string().max(1024),
-    emojis: z.object({
-        text: z.array(Emoji).length(3),
-        image: z.array(Emoji).length(3),
-    }),
+    emojis: z.array(Emoji).length(6),
     jpgBase64: z.string().max(300_000)
 })
 
@@ -46,13 +43,13 @@ export function bookTex(book: Book) {
     const pages = book.pages
 
     const emojiElements = Object.fromEntries(
-        pages.flatMap(p => [...p.emojis.text, ...p.emojis.image].map(emoji => {
+        pages.flatMap(p => p.emojis.map(emoji => {
             const svg = emojiMap[emoji]
             return [emoji, fromSvg(svg!)]
         })))
 
     const gradColors = pages.flatMap(p => p.gradient)
-    const textBgColors = pages.map(p => p.textBg)
+    const textBgColors = pages.map(p => p.textBackground)
     const emojiColors = Object.values(emojiElements).flatMap(es => es.flatMap(getColors))
     const colors = colorMap(new Set([
         book.color,
@@ -123,8 +120,8 @@ ${book.pages.map((page, i) => {
             }).join('\n')
         }
 
-        const esText = emojisTex(page.emojis.text, TRANSFORMS_TEXT)
-        const esImage = emojisTex(page.emojis.image, TRANSFORMS_IMAGE)
+        const esText = emojisTex(page.emojis.slice(0, 3), TRANSFORMS_TEXT)
+        const esImage = emojisTex(page.emojis.slice(3, 6), TRANSFORMS_IMAGE)
         const rtl = book.lang === 'he'
 
         const image = String.raw`
@@ -155,7 +152,7 @@ ${esImage}
 (current page.south west) rectangle ([xshift=148.5mm]current page.north east);
 \fill[
 opacity=0.2,
-color=c${colors[page.textBg]},
+color=c${colors[page.textBackground]},
 yshift=-20,
 xscale=380,
 yscale=-500,

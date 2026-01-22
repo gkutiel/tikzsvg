@@ -1,11 +1,13 @@
 import assert from 'assert'
 import sax from 'sax'
 import { z } from 'zod'
+import { emojiMap } from './emojis'
 
 export const color = z.string().length(7)
 export const gradient = z.array(color).length(2)
 
-export const Emoji = z.string().max(8)
+export type Emoji = z.infer<typeof Emoji>
+export const Emoji = z.object(emojiMap).keyof()
 
 const langs = ['he', 'en'] as const
 export const Lang = z.enum(langs)

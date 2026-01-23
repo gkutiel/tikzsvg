@@ -60,7 +60,7 @@ type Close = {
     [t in types]: () => void
 }
 
-export function hex(s: string | undefined): string | undefined {
+function hex(s: string | undefined): string | undefined {
     if (!s) return
     const res = s.replace('#', '')
     assert([3, 6].includes(res.length), `Color ${s} is not valid hex`)
@@ -142,7 +142,7 @@ export function getColors(e: Element): (string | undefined)[] {
     return [e.fill]
 }
 
-export function fillStr(fill: string | undefined, colors: Record<string, number>) {
+function fillStr(fill: string | undefined, colors: Record<string, number>) {
     if (!fill) return ''
     assert(fill in colors, `Color ${fill} not in ${Object.keys(colors)}`)
     return `fill=c${colors[fill]}`
@@ -152,7 +152,7 @@ type To = {
     [t in types]: (args: Extract<Element, { type: t }>, colors: Record<string, number>) => string
 }
 
-export const toTikz: To = {
+const toTikz: To = {
     circle({ cx, cy, r, fill }, colors) {
         return `\\fill[${fillStr(fill, colors)}] (${cx}, ${cy}) circle (${r});`
     },

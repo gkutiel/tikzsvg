@@ -1,7 +1,7 @@
 
 import assert from "assert"
 import { z } from "zod"
-import { background, centering, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, Large, minipage, normalsize, poly, svgTex, txtBackground, vspace, type Transform } from "./common"
+import { absolute, background, centering, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, img, Lang, Large, minipage, normalsize, poly, svg, tikzpicture, txtBackground, vfill, vspace } from "./common"
 import { emojiMap } from "./emojis"
 
 
@@ -20,7 +20,6 @@ export const Cover = z.object({
     avifBase64: z.string().max(500_000),
 })
 
-const TRANSFORM: Transform = { x: -150, y: 0, scale: 2.3, rotate: -15 }
 export function coverTex({
     lang,
     gradient,
@@ -133,7 +132,7 @@ xshift=-170,
 scale=340] svg "M 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05 C 0.76 0.00 0.54 0.02 0.41 0.05 C 0.28 0.08 0.12 0.10 0.06 0.24 C 0.00 0.37 0.00 0.73 0.05 0.85 C 0.11 0.97 0.26 0.94 0.39 0.96 C 0.51 0.98 0.71 1.00 0.80 0.96 C 0.90 0.92 0.94 0.82 0.97 0.72 C 1.00 0.62 0.99 0.48 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05";
 \node[opacity=.75] at (0,0) {\includegraphics[width=12cm]{cover.jpg}};
 \end{scope}
-${svgTex(TRANSFORM, el, colors)}
+${''}
 \end{tikzpicture}
 \end{minipage}
 \end{minipage}
@@ -171,6 +170,7 @@ ${[
                 ].join('\n')
             }),
 
+            // TITLE
             minipage({
                 vAlign: 't',
                 width: .5,
@@ -189,20 +189,33 @@ ${[
                         ].join('\n')
                     }),
                     '',
-                    // vfill,
+                    vfill,
                     centering,
-                    // tikz([
-                    //     img({ src: 'cover.jpg' }),
-                    //     svgTex(TRANSFORM, fromSvg(emojiMap[emoji]!), colors)
-                    // ].join('\n')),
+                    tikzpicture([
+                        img({ src: 'cover.jpg' }),
+                    ].join('\n')),
+                    vfill,
                 ].join('\n')
             }),
+            // BACK COVER
             minipage({
                 vAlign: 't',
                 width: .5,
                 height: 1,
                 content: 'B'
-            })
+            }),
+
+            // EMOJI
+            absolute([
+                svg({
+                    x: 10,
+                    y: 220,
+                    scale: 2.3,
+                    rotate: -15,
+                    colors,
+                    elements: el,
+                })
+            ].join('\n')),
         ].join('\n')}
 
 \end{document}

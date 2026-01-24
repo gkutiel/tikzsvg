@@ -199,17 +199,18 @@ export function defineColors(colors: Record<string, number>) {
     return Object.entries(colors).map(([color, i]) => `\\definecolor{c${i}}{HTML}{${color.replace('#', '')}}`).join('\n')
 }
 
-export interface Transform {
+interface Svg {
     x: number
     y: number
     scale: number
     rotate: number
+    elements: Element[]
+    colors: Record<string, number>
 }
-
-export function svgTex({ x, y, scale, rotate }: Transform, es: Element[], colors: Record<string, number>) {
+export function svg({ x, y, scale, rotate, elements, colors }: Svg) {
     return String.raw`
 \begin{scope}[x=1pt, y=1pt, xshift=${x}, scale=${scale}, yscale=-1, yshift=${y}, rotate=${rotate}]
-${es.map(e => toTikz[e.type](e as any, colors)).join('\n')}
+${elements.map(e => toTikz[e.type](e as any, colors)).join('\n')}
 \end{scope}`
 }
 
@@ -259,6 +260,12 @@ export function background(raw: Background) {
 \shade [left color=c${g1}, right color=c${g2}, shading angle=45] 
 (current page.south west) rectangle (current page.north east);
 ${tikz}
+\end{tikzpicture}%`
+}
+
+export function absolute(content: string) {
+    return String.raw`\begin{tikzpicture}[remember picture, overlay, shift={(current page.north west)}]
+${content}
 \end{tikzpicture}%`
 }
 

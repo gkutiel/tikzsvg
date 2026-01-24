@@ -1,6 +1,6 @@
 import assert from 'assert'
 import z from 'zod'
-import { color, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, svgTex, type Transform } from './common'
+import { color, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, svg, type Transform } from './common'
 import { emojiMap } from './emojis'
 
 
@@ -122,7 +122,7 @@ ${book.pages.map((page, i) => {
             assert(emojis.length <= transforms.length)
             return emojis.map((emoji, i) => {
                 const els = emojiElements[emoji]!
-                return svgTex(transforms[i]!, els, colors)
+                return svg(transforms[i]!, els, colors)
             }).join('\n')
         }
 

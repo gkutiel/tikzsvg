@@ -1,12 +1,12 @@
 import { writeFileSync } from 'fs'
-import { readFile } from 'fs/promises'
-import { Book, bookTex } from '../src/book'
+import { bookTex } from '../src/book'
+import { he } from './he'
 
 if (module === require.main) {
-    const data = await readFile('book.json', 'utf-8').then(JSON.parse)
-    const book = Book.parse(data)
-    const tex = bookTex(book)
+    const heTex = bookTex(he)
+    writeFileSync('he.tex', heTex, 'utf-8')
 
-    // Generate the .tex file
-    writeFileSync('book.tex', tex, 'utf-8')
+    const engTex = bookTex(he)
+    writeFileSync('eng.tex', engTex, 'utf-8')
+
 }

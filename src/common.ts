@@ -261,3 +261,51 @@ export function background(raw: Background) {
 ${tikz}
 \end{tikzpicture}`
 }
+
+type TextBackground = z.infer<typeof TextBackground>
+const TextBackground = z.object({
+    yshift: z.number(),
+    xshift: z.number(),
+    xscale: z.number(),
+    yscale: z.number(),
+    color: color,
+    opacity: z.number().min(.1).max(1),
+
+})
+export function txtBackground(raw: TextBackground) {
+    const { yshift, xshift, xscale, yscale, color, opacity } = TextBackground.parse(raw)
+    return String.raw`\fill[
+yshift=${yshift},
+xshift=${xshift},
+xscale=${xscale},
+yscale=${yscale},
+fill=${color}, 
+opacity=${opacity}] svg "M 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05 C 0.76 0.00 0.54 0.02 0.41 0.05 C 0.28 0.08 0.12 0.10 0.06 0.24 C 0.00 0.37 0.00 0.73 0.05 0.85 C 0.11 0.97 0.26 0.94 0.39 0.96 C 0.51 0.98 0.71 1.00 0.80 0.96 C 0.90 0.92 0.94 0.82 0.97 0.72 C 1.00 0.62 0.99 0.48 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05";`
+}
+
+
+type Img = z.infer<typeof Img>
+const Img = z.object({
+    src: z.string(),
+})
+export function img(raw: Img) {
+    const { src } = Img.parse(raw)
+    return String.raw`\begin{scope}
+\clip[
+scale=349,
+xshift=-.5,
+yshift=-.5,
+] svg "M 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05 C 0.76 0.00 0.54 0.02 0.41 0.05 C 0.28 0.08 0.12 0.10 0.06 0.24 C 0.00 0.37 0.00 0.73 0.05 0.85 C 0.11 0.97 0.26 0.94 0.39 0.96 C 0.51 0.98 0.71 1.00 0.80 0.96 C 0.90 0.92 0.94 0.82 0.97 0.72 C 1.00 0.62 0.99 0.48 0.97 0.37 C 0.95 0.26 0.94 0.11 0.85 0.05";
+\node[opacity=.75] at (0,0) {\includegraphics[width=12cm]{${src}}};
+\end{scope}`
+}
+
+export function tikz(content: string) {
+    return String.raw`\begin{tikzpicture}
+${content}
+\end{tikzpicture}`
+}
+
+export function vspace(cm: number) {
+    return `\\vspace{${cm}cm}`
+}

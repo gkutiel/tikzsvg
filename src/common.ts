@@ -313,6 +313,44 @@ ${content}
 \end{tikzpicture}%`
 }
 
+interface Rect {
+    x: number
+    y: number
+    width: number
+    height: number
+    fill: string
+    opacity: number
+}
+
+type Tcolorbox = z.infer<typeof Tcolorbox>
+const Tcolorbox = z.object({
+    width: z.number().min(0).max(1),
+})
+
+export function tcolorbox(raw: Tcolorbox) {
+    const { width } = Tcolorbox.parse(raw)
+    return String.raw`\begin{tcolorbox}[
+    enhanced,
+    width=${width}\textwidth,
+    colback=white,
+    opacityback=0.4,
+    colframe=white,
+    opacityframe=0,
+    arc=10pt,
+    boxsep=0.5cm,
+    halign=left,
+    boxrule=0pt
+]
+    \normalsize \textbf{This is a sample tagline text}
+
+    \vspace{0.3cm}
+    \small 
+    This is sample text describing the book's content. The text can include information about the book's central theme, target audience, and the added value that readers will gain.
+    \par\vspace{0.3cm}
+    And also additional lines to expand the description and highlight important points.
+\end{tcolorbox}`
+}
+
 export function vspace(cm: number) {
     return `\\vspace{${cm}cm}`
 }
@@ -331,6 +369,28 @@ export function large(text: string) {
 
 export function normalsize(text: string) {
     return `\\normalsize ${text}`
+}
+
+export function small(text: string) {
+    return `\\small ${text}`
+}
+
+export function footnotesize(text: string) {
+    return `\\footnotesize ${text}`
+}
+
+export function scriptsize(text: string) {
+    return `\\scriptsize ${text}`
+}
+
+export function tiny(text: string) {
+    return `\\tiny ${text}`
+}
+
+
+
+export function bf(text: string) {
+    return `\\textbf{${text}}`
 }
 
 export const vfill = `\\vspace*{\\fill}`

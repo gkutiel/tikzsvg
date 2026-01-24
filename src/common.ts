@@ -260,5 +260,4 @@ export function background(raw: Background) {
 (current page.south west) rectangle (current page.north east);
 ${tikz}
 \end{tikzpicture}`
-
 }

@@ -215,18 +215,16 @@ ${elements.map(e => toTikz[e.type](e as any, colors)).join('\n')}
 }
 
 export function poly(lang: Lang) {
-    const name = langName[lang]
+    const { name, script } = langConfig[lang]
     return String.raw`
 \usepackage{polyglossia}
 \setmainlanguage{${name}}
-% Ensure this file exists in your project folder!
-${['\\newfontfamily', `${name}font[`].join('\\')}
-Script=${script[lang]},
+\setmainfont{Fredoka}[
+Script=${script},
 Path=./,
 Extension=.ttf,
 UprightFont=*-Regular,
-BoldFont=*-Bold
-]{Fredoka}`
+BoldFont=*-Bold]`
 }
 
 type MiniPage = z.infer<typeof MiniPage>
@@ -239,7 +237,7 @@ const MiniPage = z.object({
 export function minipage(raw: MiniPage) {
     const { vAlign, width, height, content } = MiniPage.parse(raw)
     return String.raw`\fbox{%
-\begin{minipage}[c][${height}\textheight][${vAlign}]{${width}\textwidth}
+    \begin{minipage}[c][${height}\textheight][${vAlign}]{${width}\textwidth}
 ${content}
 \end{minipage}}%`
 }
@@ -247,24 +245,29 @@ ${content}
 type Background = z.infer<typeof Background>
 const Background = z.object({
     gradient: gradient,
-    tikz: z.string(),
     colors: z.record(z.string(), z.number()),
+    content: z.string(),
+    rtl: z.boolean()
 })
 
 export function background(raw: Background) {
-    const { gradient: [c1, c2], tikz, colors } = Background.parse(raw)
+    const { gradient: [c1, c2], content, colors, rtl } = Background.parse(raw)
     assert(c1 && c2, "Gradient must have two colors")
     const g1 = colors[c1]
     const g2 = colors[c2]
-    return String.raw`\begin{tikzpicture}[remember picture, overlay]
+    return String.raw`\begin{tikzpicture}[remember picture, overlay, shift={(current page.north${rtl ? ' west' : ''})}]
 \shade [left color=c${g1}, right color=c${g2}, shading angle=45] 
 (current page.south west) rectangle (current page.north east);
-${tikz}
+${content}
 \end{tikzpicture}%`
 }
 
-export function absolute(content: string) {
-    return String.raw`\begin{tikzpicture}[remember picture, overlay, shift={(current page.north west)}]
+interface Absolute {
+    rtl: boolean
+    content: string
+}
+export function absolute({ rtl, content }: Absolute) {
+    return String.raw`\begin{tikzpicture}[remember picture, overlay, shift={(current page.north${rtl ? ' west' : ''})}]
 ${content}
 \end{tikzpicture}%`
 }
@@ -281,7 +284,8 @@ const TextBackground = z.object({
 })
 export function txtBackground(raw: TextBackground) {
     const { yshift, xshift, xscale, yscale, color, opacity } = TextBackground.parse(raw)
-    return String.raw`\fill[
+    return String.raw`% TEXT BACKGROUND
+\fill[
 yshift=${yshift},
 xshift=${xshift},
 xscale=${xscale},
@@ -350,6 +354,11 @@ ${content}
 \end{tcolorbox}`
 }
 
+export function ragged(rtl: boolean) {
+    return rtl
+        ? `\\RaggedLeft`
+        : `\\RaggedRight`
+}
 export function vspace(cm: number) {
     return `\\vspace{${cm}cm}`
 }
@@ -400,10 +409,9 @@ interface Quote {
 }
 
 export function quote({ text, name }: Quote) {
-    return String.raw`\begin{quote}
+    return String.raw`
 ${footnotesize(bf(`${text}`))} \\[.3cm]
-\hfill -${tiny(name)}
-\end{quote}`
+\hfill ${tiny(`-${name}`)}`
 }
 
 export const vfill = `\\vspace*{\\fill}`

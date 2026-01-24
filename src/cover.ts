@@ -1,7 +1,7 @@
 
 import assert from "assert"
 import { z } from "zod"
-import { absolute, background, bf, centering, colorMap, defineColors, Emoji, footnotesize, fromSvg, getColors, gradient, img, Lang, Large, minipage, normalsize, parskip, poly, quote, svg, tcolorbox, tikzpicture, txtBackground, vfill, vspace } from "./common"
+import { absolute, background, bf, centering, colorMap, defineColors, Emoji, footnotesize, fromSvg, getColors, gradient, img, Lang, Large, minipage, normalsize, parskip, poly, quote, ragged, svg, tcolorbox, tikzpicture, txtBackground, vfill, vspace } from "./common"
 import { emojiMap } from "./emojis"
 
 const backBackground = String.raw`\fill[
@@ -64,120 +64,102 @@ export function coverTex({
 
     const rtl = lang === 'he'
 
-    return String.raw`
-\documentclass[17pt]{extarticle}
-\usepackage[a4paper, landscape, margin=0cm]{geometry}
-\usepackage{setspace}
-\usepackage[most]{tcolorbox}
-
-\usepackage{ragged2e}
-\RaggedRight
-
-\usepackage{tikz}
-\usetikzlibrary{svg.path}
-\usetikzlibrary{calc}
-
-\setlength{\fboxsep}{0pt}
-\setlength{\fboxrule}{.1pt}
-${poly(lang)}
-\pagestyle{empty}
-
-\begin{document}
-${defineColors(colors)}
-\setlength{\parindent}{0pt}
-\noindent
-${[
-            background({
-                gradient,
-                colors,
-                tikz: [
-                    txtBackground({
-                        yshift: 155,
-                        xshift: 10,
-                        xscale: 410,
-                        yscale: 120,
-                        color: 'blue!10',
-                        opacity: 0.4
-                    }),
-                ].join('\n')
-            }),
-
-            // TITLE
+    const titlePage = minipage({
+        vAlign: 't',
+        width: .5,
+        height: 1,
+        content: [
             minipage({
-                vAlign: 't',
-                width: .5,
-                height: 1,
+                vAlign: 'c',
+                width: 1,
+                height: .28,
                 content: [
-                    minipage({
-                        vAlign: 'c',
-                        width: 1,
-                        height: .28,
-                        content: [
-                            centering,
-                            Large(bf(title)),
-                            '',
-                            vspace(0.5),
-                            normalsize(author)
-                        ].join('\n')
-                    }),
+                    centering,
+                    Large(bf(title)),
                     '',
-                    vfill,
-                    centering,
-                    tikzpicture([
-                        img({ src: 'cover.jpg' }),
-                    ].join('\n')),
-                    vfill,
+                    vspace(0.5),
+                    normalsize(author)
                 ].join('\n')
             }),
-            // BACK COVER
-            minipage({
-                vAlign: 't',
-                width: .5,
-                height: 1,
-                content: [
-                    centering,
-                    vspace(1),
-                    tcolorbox({
-                        width: 0.9,
-                        color: 'white',
-                        opacity: 0.4,
-                        arc: 5,
-                        boxsep: .4,
-                        halign: 'left',
-                        content: minipage({
-                            vAlign: 't',
-                            width: 1,
-                            height: .6,
-                            content: [
-                                parskip(0.3),
-                                normalsize(bf(tagline)),
-                                '',
-                                vspace(0.3),
-                                footnotesize(blurb),
-                                '',
-                                vfill,
-                                quote({
-                                    text: testimonial_quote,
-                                    name: testimonial_name,
-                                })
-                            ].join('\n')
+            '',
+            vfill,
+            centering,
+            tikzpicture([
+                img({ src: 'cover.jpg' }),
+            ].join('\n')),
+            vfill,
+        ].join('\n')
+    })
+
+    const backPage = minipage({
+        vAlign: 't',
+        width: .5,
+        height: 1,
+        content: [
+            centering,
+            vspace(1),
+            tcolorbox({
+                width: 0.9,
+                color: 'white',
+                opacity: 0.4,
+                arc: 5,
+                boxsep: .4,
+                halign: rtl ? 'right' : 'left',
+                content: minipage({
+                    vAlign: 't',
+                    width: 1,
+                    height: .6,
+                    content: [
+                        ragged(rtl),
+                        parskip(0.3),
+                        normalsize(bf(tagline)),
+                        '',
+                        vspace(0.3),
+                        footnotesize(blurb),
+                        '',
+                        vfill,
+                        quote({
+                            text: testimonial_quote,
+                            name: testimonial_name,
                         })
-                    }),
-                    '',
-                    vfill,
-                    barcode,
-                    '',
-                    'https://booky.kids',
-                    '',
-                    vspace(0.2),
-                    footnotesize(slogan),
-                    '',
-                    vfill,
-                ].join('\n')
+                    ].join('\n')
+                })
             }),
+            '',
+            vfill,
+            barcode,
+            '',
+            'https://booky.kids',
+            '',
+            vspace(0.2),
+            footnotesize(slogan),
+            '',
+            vfill,
+        ].join('\n')
+    })
 
-            // EMOJI
-            absolute([
+    const pages = [backPage, titlePage]
+    const doc = [
+        // BACKGROUND
+        background({
+            rtl,
+            gradient,
+            colors,
+            content: txtBackground({
+                yshift: -145,
+                xshift: 0,
+                xscale: 410,
+                yscale: 130,
+                color: 'blue!10',
+                opacity: 0.4
+            })
+        }),
+
+        ...(rtl ? pages.reverse() : pages),
+        // EMOJI
+        absolute({
+            rtl,
+            content: [
                 svg({
                     x: 10,
                     y: 220,
@@ -186,8 +168,34 @@ ${[
                     colors,
                     elements: el,
                 })
-            ].join('\n')),
-        ].join('\n')}
+            ].join('\n')
+        })
+    ]
+
+    return String.raw`
+\documentclass[17pt]{extarticle}
+\usepackage[a4paper, landscape, margin=0cm]{geometry}
+\usepackage{setspace}
+\usepackage[most]{tcolorbox}
+\usepackage[none]{hyphenat}
+\usepackage{ragged2e}
+
+
+\usepackage{tikz}
+\usetikzlibrary{svg.path}
+\usetikzlibrary{calc}
+
+\setlength{\fboxsep}{0pt}
+\setlength{\fboxrule}{0pt}
+${poly(lang)}
+\pagestyle{empty}
+
+\begin{document}
+${ragged(rtl)}
+${defineColors(colors)}
+\setlength{\parindent}{0pt}
+\noindent
+${(rtl ? doc.reverse() : doc).join('\n')}
 
 \end{document}
 `

@@ -37,30 +37,7 @@ export function coverTex({
     const el = fromSvg(emojiMap[emoji]!)
     const colors = colorMap(new Set([...gradient, ...el.flatMap(getColors)]))
 
-    return String.raw`
-\documentclass[17pt]{extarticle}
-\usepackage[a4paper, landscape, margin=0cm]{geometry}
-\usepackage{setspace}
-\usepackage{tikz}
-\usetikzlibrary{svg.path}
-\usetikzlibrary{calc}
-
-\usepackage{polyglossia}
-\setmainlanguage{hebrew}
-% Ensure this file exists in your project folder!
-\newfontfamily\hebrewfont[
-Script=Hebrew,
-Path=./,
-Extension=.ttf,
-UprightFont=*-Regular,
-BoldFont=*-Bold
-]{Fredoka}
-
-\pagestyle{empty}
-
-\begin{document}
-${defineColors(colors)}
-
+    const backCover = String.raw`
 \begin{tikzpicture}[remember picture, overlay]
 \shade [shading=axis, shading angle=45, left color=c${colors[c1]}, right color=c${colors[c2]}] 
 (current page.south west) rectangle (current page.north east);
@@ -133,10 +110,9 @@ https://booky.kids
 ${slogan}
 
 \end{minipage}
-\end{minipage}
-% 
-% 
-\begin{minipage}[c][0.95\textheight]{0.5\textwidth}
+\end{minipage}`
+
+    const frontCover = String.raw`\begin{minipage}[c][0.95\textheight]{0.5\textwidth}
 \begin{minipage}[c][0.25\textheight]{\textwidth}
 \centering
 \large
@@ -158,6 +134,35 @@ ${svgTex(TRANSFORM, el, colors)}
 \end{tikzpicture}
 \end{minipage}
 \end{minipage}
+`
+
+    return String.raw`
+\documentclass[17pt]{extarticle}
+\usepackage[a4paper, landscape, margin=0cm]{geometry}
+\usepackage{setspace}
+\usepackage{tikz}
+\usetikzlibrary{svg.path}
+\usetikzlibrary{calc}
+
+\usepackage{polyglossia}
+\setmainlanguage{hebrew}
+% Ensure this file exists in your project folder!
+\newfontfamily\hebrewfont[
+Script=Hebrew,
+Path=./,
+Extension=.ttf,
+UprightFont=*-Regular,
+BoldFont=*-Bold
+]{Fredoka}
+
+\pagestyle{empty}
+
+\begin{document}
+${defineColors(colors)}
+
+${backCover}
+${frontCover}
+
 
 \end{document}
 `

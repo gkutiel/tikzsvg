@@ -39,6 +39,8 @@ const TRANSFORMS_IMAGE: Transform[] = [
     { x: 100, y: 80, scale: 2.3, rotate: 10 }
 ]
 
+const LINE_SPACING = 1.15
+
 export function bookTex(book: Book) {
     const pages = book.pages
 
@@ -73,12 +75,16 @@ export function bookTex(book: Book) {
 }
 
 \usepackage{polyglossia}
-\setmainlanguage{hebrew}
+${book.lang === 'he' ? String.raw`\setmainlanguage{hebrew}
 \newfontfamily\hebrewfont[
 Script=Hebrew,
 Path=./,                
 BoldFont={Fredoka-Bold.ttf} 
-]{Fredoka-Bold.ttf}
+]{Fredoka-Bold.ttf}` : String.raw`\setmainlanguage{english}
+\newfontfamily\englishfont[
+Path=./,                
+BoldFont={Fredoka-Bold.ttf} 
+]{Fredoka-Bold.ttf}`}
 
 
 ${defineColors(colors)}
@@ -165,7 +171,9 @@ ${esText}
 \begin{center}
 \begin{minipage}{10cm}
 \Huge 
-\raggedleft
+\linespread{${LINE_SPACING}}\selectfont
+\setlength{\parskip}{0.8em}
+${rtl ? '\\raggedleft' : '\\raggedright'}
 ${page.text}
 \end{minipage}
 \end{center}

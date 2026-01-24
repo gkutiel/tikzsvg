@@ -139,32 +139,39 @@ ${[
                     vspace(1),
                     tcolorbox({
                         width: 0.9,
-                        height: 0.6,
+                        color: 'white',
+                        opacity: 0.4,
                         arc: 5,
-                        boxrule: 0,
-                        boxsep: .5,
-                        colback: 'white',
-                        opacityback: 0.4,
-                        colframe: 'white',
+                        boxsep: .4,
                         halign: 'left',
-                        opacityframe: 0,
-                        content: [
-                            parskip(0.3),
-                            normalsize(bf(tagline)),
-                            '',
-                            vspace(0.3),
-                            footnotesize(blurb),
-                            '',
-                            vfill,
-                            quote({
-                                text: testimonial_quote,
-                                name: testimonial_name,
-                            })
-                        ].join('\n')
+                        content: minipage({
+                            vAlign: 't',
+                            width: 1,
+                            height: .6,
+                            content: [
+                                parskip(0.3),
+                                normalsize(bf(tagline)),
+                                '',
+                                vspace(0.3),
+                                footnotesize(blurb),
+                                '',
+                                vfill,
+                                quote({
+                                    text: testimonial_quote,
+                                    name: testimonial_name,
+                                })
+                            ].join('\n')
+                        })
                     }),
                     '',
-                    vspace(0.2),
+                    vfill,
                     barcode,
+                    '',
+                    'https://booky.kids',
+                    '',
+                    vspace(0.2),
+                    footnotesize(slogan),
+                    '',
                     vfill,
                 ].join('\n')
             }),

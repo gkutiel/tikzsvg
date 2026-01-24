@@ -325,33 +325,28 @@ interface Rect {
 type Tcolorbox = z.infer<typeof Tcolorbox>
 const Tcolorbox = z.object({
     width: z.number().min(0).max(1),
-    height: z.number().min(0).max(1),
-    colback: z.string(),
-    colframe: z.string(),
-    opacityback: z.number().min(0).max(1),
-    opacityframe: z.number().min(0).max(1),
+    color: z.string(),
+    opacity: z.number().min(0).max(1),
     arc: z.number(),
     boxsep: z.number(),
     halign: z.enum(['left', 'center', 'right']),
-    boxrule: z.number(),
     content: z.string(),
 })
 
 export function tcolorbox(raw: Tcolorbox) {
-    const { width, height, colback, opacityback, colframe, opacityframe, arc, boxsep, halign, boxrule, content } = Tcolorbox.parse(raw)
+    const { width, color, opacity, arc, boxsep, halign, content } = Tcolorbox.parse(raw)
     return String.raw`\begin{tcolorbox}[
-    enhanced,
-    width=${width}\textwidth,
-    height=${height}\textheight,
-    colback=${colback},
-    opacityback=${opacityback},
-    colframe=${colframe},
-    opacityframe=${opacityframe},
-    arc=${arc}pt,
-    boxsep=${boxsep}cm,
-    halign=${halign},
-    boxrule=${boxrule}pt]
-    ${content}
+width=${width}\textwidth,
+enhanced,
+colback=${color},
+colframe=${color},
+opacityback=${opacity},
+opacityframe=0,
+arc=${arc}pt,
+boxsep=${boxsep}cm,
+halign=${halign},
+valign=top]
+${content}
 \end{tcolorbox}`
 }
 
@@ -406,11 +401,10 @@ interface Quote {
 
 export function quote({ text, name }: Quote) {
     return String.raw`\begin{quote}
-    ${footnotesize(bf(`''${text}''`))} \\[.5cm]
-    \hfill -${tiny(name)}
-\end{quote}
-`
-
+${footnotesize(bf(`${text}`))} \\[.3cm]
+\hfill -${tiny(name)}
+\end{quote}`
 }
+
 export const vfill = `\\vspace*{\\fill}`
 export const centering = '\\centering'

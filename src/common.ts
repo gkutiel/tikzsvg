@@ -10,7 +10,28 @@ export type Emoji = z.infer<typeof Emoji>
 export const Emoji = z.object(emojiMap).keyof()
 
 const langs = ['he', 'en'] as const
+export type Lang = typeof langs[number]
 export const Lang = z.enum(langs)
+
+type LangConfig = {
+    name: string
+    script: string
+}
+
+const langConfig: { [key in Lang]: LangConfig } = {
+    he: { name: 'hebrew', script: 'Hebrew' },
+    en: { name: 'english', script: 'Latin' },
+}
+
+export const langName: { [key in Lang]: string } = {
+    he: langConfig.he.name,
+    en: langConfig.en.name,
+}
+
+export const script: { [key in Lang]: string } = {
+    he: langConfig.he.script,
+    en: langConfig.en.script,
+}
 
 type Path = z.infer<typeof Path>
 const Path = z.object({
@@ -190,4 +211,54 @@ export function svgTex({ x, y, scale, rotate }: Transform, es: Element[], colors
 \begin{scope}[x=1pt, y=1pt, xshift=${x}, scale=${scale}, yscale=-1, yshift=${y}, rotate=${rotate}]
 ${es.map(e => toTikz[e.type](e as any, colors)).join('\n')}
 \end{scope}`
+}
+
+export function poly(lang: Lang) {
+    const name = langName[lang]
+    return String.raw`
+\usepackage{polyglossia}
+\setmainlanguage{${name}}
+% Ensure this file exists in your project folder!
+${['\\newfontfamily', `${name}font[`].join('\\')}
+Script=${script[lang]},
+Path=./,
+Extension=.ttf,
+UprightFont=*-Regular,
+BoldFont=*-Bold
+]{Fredoka}`
+}
+
+type MiniPage = z.infer<typeof MiniPage>
+const MiniPage = z.object({
+    vAlign: z.enum(['t', 'c', 'b']),
+    width: z.number().min(0).max(1),
+    height: z.number().min(0).max(1),
+    content: z.string(),
+})
+export function minipage(raw: MiniPage) {
+    const { vAlign, width, height, content } = MiniPage.parse(raw)
+    return String.raw`\fbox{%
+\begin{minipage}[${vAlign}][${height}\textheight]{${width}\textwidth}
+${content}
+\end{minipage}}`
+}
+
+type Background = z.infer<typeof Background>
+const Background = z.object({
+    gradient: gradient,
+    tikz: z.string(),
+    colors: z.record(z.string(), z.number()),
+})
+
+export function background(raw: Background) {
+    const { gradient: [c1, c2], tikz, colors } = Background.parse(raw)
+    assert(c1 && c2, "Gradient must have two colors")
+    const g1 = colors[c1]
+    const g2 = colors[c2]
+    return String.raw`\begin{tikzpicture}[remember picture, overlay]
+\shade [left color=c${g1}, right color=c${g2}, shading angle=45] 
+(current page.south west) rectangle (current page.north east);
+${tikz}
+\end{tikzpicture}`
+
 }

@@ -1,13 +1,14 @@
 
 import assert from "assert"
 import { z } from "zod"
-import { colorMap, defineColors, Emoji, fromSvg, getColors, svgTex, type Transform } from "./common"
+import { background, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, minipage, poly, svgTex, type Transform } from "./common"
 import { emojiMap } from "./emojis"
 
 
 export type Cover = z.infer<typeof Cover>
 export const Cover = z.object({
-    gradient: z.array(z.string()).length(2),
+    lang: Lang,
+    gradient: gradient,
     emoji: Emoji,
     title: z.string().max(64),
     author: z.string().max(32),
@@ -21,6 +22,7 @@ export const Cover = z.object({
 
 const TRANSFORM: Transform = { x: -220, y: 60, scale: 2.3, rotate: -15 }
 export function coverTex({
+    lang,
     gradient,
     emoji,
     title,
@@ -37,6 +39,7 @@ export function coverTex({
     const el = fromSvg(emojiMap[emoji]!)
     const colors = colorMap(new Set([...gradient, ...el.flatMap(getColors)]))
 
+    const rtl = lang === 'he'
     const backCover = String.raw`
 \begin{tikzpicture}[remember picture, overlay]
 \shade [shading=axis, shading angle=45, left color=c${colors[c1]}, right color=c${colors[c2]}] 
@@ -144,24 +147,25 @@ ${svgTex(TRANSFORM, el, colors)}
 \usetikzlibrary{svg.path}
 \usetikzlibrary{calc}
 
-\usepackage{polyglossia}
-\setmainlanguage{hebrew}
-% Ensure this file exists in your project folder!
-\newfontfamily\hebrewfont[
-Script=Hebrew,
-Path=./,
-Extension=.ttf,
-UprightFont=*-Regular,
-BoldFont=*-Bold
-]{Fredoka}
-
+${poly(lang)}
 \pagestyle{empty}
 
 \begin{document}
 ${defineColors(colors)}
-
-${backCover}
-${frontCover}
+\noindent
+${background({ gradient, tikz: '', colors })}
+${minipage({
+        vAlign: 'c',
+        width: .5,
+        height: 1,
+        content: 'A'
+    })}
+${minipage({
+        vAlign: 'c',
+        width: .5,
+        height: 1,
+        content: 'B'
+    })}
 
 
 \end{document}

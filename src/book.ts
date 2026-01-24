@@ -10,7 +10,7 @@ export const Page = z.object({
     textBackground: z.string(),
     text: z.string().max(1024),
     emojis: z.array(Emoji).length(6),
-    jpgBase64: z.string().max(300_000)
+    jpgBase64: z.string().max(500_000)
 })
 
 export type Book = z.infer<typeof Book>
@@ -21,7 +21,7 @@ export const Book = z.object({
     color: color,
     title: z.string().max(256),
     author: z.string().max(256),
-    heroJpgBase64: z.string().max(256_000),
+    heroJpgBase64: z.string().max(300_000),
 
     // OTHER PAGES
     pages: z.array(Page),

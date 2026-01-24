@@ -240,7 +240,7 @@ export function minipage(raw: MiniPage) {
     return String.raw`\fbox{%
 \begin{minipage}[c][${height}\textheight][${vAlign}]{${width}\textwidth}
 ${content}
-\end{minipage}}`
+\end{minipage}}%`
 }
 
 type Background = z.infer<typeof Background>
@@ -259,7 +259,7 @@ export function background(raw: Background) {
 \shade [left color=c${g1}, right color=c${g2}, shading angle=45] 
 (current page.south west) rectangle (current page.north east);
 ${tikz}
-\end{tikzpicture}`
+\end{tikzpicture}%`
 }
 
 type TextBackground = z.infer<typeof TextBackground>
@@ -300,10 +300,10 @@ yshift=-.5,
 \end{scope}`
 }
 
-export function tikz(content: string) {
+export function tikzpicture(content: string) {
     return String.raw`\begin{tikzpicture}
 ${content}
-\end{tikzpicture}`
+\end{tikzpicture}%`
 }
 
 export function vspace(cm: number) {

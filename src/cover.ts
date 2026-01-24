@@ -1,7 +1,7 @@
 
 import assert from "assert"
 import { z } from "zod"
-import { absolute, background, bf, centering, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, img, Lang, Large, minipage, normalsize, poly, small, svg, tikzpicture, txtBackground, vfill, vspace } from "./common"
+import { absolute, background, bf, centering, colorMap, defineColors, Emoji, footnotesize, fromSvg, getColors, gradient, img, Lang, Large, minipage, normalsize, parskip, poly, quote, svg, tcolorbox, tikzpicture, txtBackground, vfill, vspace } from "./common"
 import { emojiMap } from "./emojis"
 
 const backBackground = String.raw`\fill[
@@ -69,6 +69,10 @@ export function coverTex({
 \usepackage[a4paper, landscape, margin=0cm]{geometry}
 \usepackage{setspace}
 \usepackage[most]{tcolorbox}
+
+\usepackage{ragged2e}
+\RaggedRight
+
 \usepackage{tikz}
 \usetikzlibrary{svg.path}
 \usetikzlibrary{calc}
@@ -80,6 +84,7 @@ ${poly(lang)}
 
 \begin{document}
 ${defineColors(colors)}
+\setlength{\parindent}{0pt}
 \noindent
 ${[
             background({
@@ -132,15 +137,29 @@ ${[
                 content: [
                     centering,
                     vspace(1),
-                    minipage({
-                        vAlign: 't',
-                        width: .8,
-                        height: .6,
+                    tcolorbox({
+                        width: 0.9,
+                        height: 0.6,
+                        arc: 5,
+                        boxrule: 0,
+                        boxsep: .5,
+                        colback: 'white',
+                        opacityback: 0.4,
+                        colframe: 'white',
+                        halign: 'left',
+                        opacityframe: 0,
                         content: [
+                            parskip(0.3),
                             normalsize(bf(tagline)),
                             '',
                             vspace(0.3),
-                            small(blurb),
+                            footnotesize(blurb),
+                            '',
+                            vfill,
+                            quote({
+                                text: testimonial_quote,
+                                name: testimonial_name,
+                            })
                         ].join('\n')
                     }),
                     '',

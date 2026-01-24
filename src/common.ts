@@ -325,29 +325,33 @@ interface Rect {
 type Tcolorbox = z.infer<typeof Tcolorbox>
 const Tcolorbox = z.object({
     width: z.number().min(0).max(1),
+    height: z.number().min(0).max(1),
+    colback: z.string(),
+    colframe: z.string(),
+    opacityback: z.number().min(0).max(1),
+    opacityframe: z.number().min(0).max(1),
+    arc: z.number(),
+    boxsep: z.number(),
+    halign: z.enum(['left', 'center', 'right']),
+    boxrule: z.number(),
+    content: z.string(),
 })
 
 export function tcolorbox(raw: Tcolorbox) {
-    const { width } = Tcolorbox.parse(raw)
+    const { width, height, colback, opacityback, colframe, opacityframe, arc, boxsep, halign, boxrule, content } = Tcolorbox.parse(raw)
     return String.raw`\begin{tcolorbox}[
     enhanced,
     width=${width}\textwidth,
-    colback=white,
-    opacityback=0.4,
-    colframe=white,
-    opacityframe=0,
-    arc=10pt,
-    boxsep=0.5cm,
-    halign=left,
-    boxrule=0pt
-]
-    \normalsize \textbf{This is a sample tagline text}
-
-    \vspace{0.3cm}
-    \small 
-    This is sample text describing the book's content. The text can include information about the book's central theme, target audience, and the added value that readers will gain.
-    \par\vspace{0.3cm}
-    And also additional lines to expand the description and highlight important points.
+    height=${height}\textheight,
+    colback=${colback},
+    opacityback=${opacityback},
+    colframe=${colframe},
+    opacityframe=${opacityframe},
+    arc=${arc}pt,
+    boxsep=${boxsep}cm,
+    halign=${halign},
+    boxrule=${boxrule}pt]
+    ${content}
 \end{tcolorbox}`
 }
 
@@ -387,11 +391,26 @@ export function tiny(text: string) {
     return `\\tiny ${text}`
 }
 
-
-
 export function bf(text: string) {
     return `\\textbf{${text}}`
 }
 
+export function parskip(cm: number) {
+    return `\\setlength{\\parskip}{${cm}cm}`
+}
+
+interface Quote {
+    text: string
+    name: string
+}
+
+export function quote({ text, name }: Quote) {
+    return String.raw`\begin{quote}
+    ${footnotesize(bf(`''${text}''`))} \\[.5cm]
+    \hfill -${tiny(name)}
+\end{quote}
+`
+
+}
 export const vfill = `\\vspace*{\\fill}`
 export const centering = '\\centering'

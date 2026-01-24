@@ -238,7 +238,7 @@ const MiniPage = z.object({
 export function minipage(raw: MiniPage) {
     const { vAlign, width, height, content } = MiniPage.parse(raw)
     return String.raw`\fbox{%
-\begin{minipage}[${vAlign}][${height}\textheight]{${width}\textwidth}
+\begin{minipage}[c][${height}\textheight][${vAlign}]{${width}\textwidth}
 ${content}
 \end{minipage}}`
 }
@@ -309,3 +309,22 @@ ${content}
 export function vspace(cm: number) {
     return `\\vspace{${cm}cm}`
 }
+
+export function Huge(text: string) {
+    return `\\Huge ${text}`
+}
+
+export function Large(text: string) {
+    return `\\Large ${text}`
+}
+
+export function large(text: string) {
+    return `\\large ${text}`
+}
+
+export function normalsize(text: string) {
+    return `\\normalsize ${text}`
+}
+
+export const vfill = `\\vspace*{\\fill}`
+export const centering = '\\centering'

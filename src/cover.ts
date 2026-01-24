@@ -1,7 +1,7 @@
 
 import assert from "assert"
 import { z } from "zod"
-import { background, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, img, Lang, minipage, poly, svgTex, tikz, txtBackground, vspace, type Transform } from "./common"
+import { background, centering, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, Large, minipage, normalsize, poly, svgTex, txtBackground, vspace, type Transform } from "./common"
 import { emojiMap } from "./emojis"
 
 
@@ -20,7 +20,7 @@ export const Cover = z.object({
     avifBase64: z.string().max(500_000),
 })
 
-const TRANSFORM: Transform = { x: -220, y: 60, scale: 2.3, rotate: -15 }
+const TRANSFORM: Transform = { x: -150, y: 0, scale: 2.3, rotate: -15 }
 export function coverTex({
     lang,
     gradient,
@@ -147,47 +147,63 @@ ${svgTex(TRANSFORM, el, colors)}
 \usetikzlibrary{svg.path}
 \usetikzlibrary{calc}
 
+\setlength{\fboxsep}{0pt}
+\setlength{\fboxrule}{.1pt}
 ${poly(lang)}
 \pagestyle{empty}
 
 \begin{document}
 ${defineColors(colors)}
 \noindent
-${background({
-        gradient,
-        colors,
-        tikz: [
-            txtBackground({
-                yshift: 150,
-                xshift: 10,
-                xscale: 410,
-                yscale: 120,
-                color: 'blue!10',
-                opacity: 0.4
+${[
+            background({
+                gradient,
+                colors,
+                tikz: [
+                    txtBackground({
+                        yshift: 155,
+                        xshift: 10,
+                        xscale: 410,
+                        yscale: 120,
+                        color: 'blue!10',
+                        opacity: 0.4
+                    }),
+                ].join('\n')
             }),
-        ].join('\n')
-    })}
-${minipage({
-        vAlign: 'c',
-        width: .5,
-        height: 1,
-        content: [
-            '\\centering',
-            vspace(5),
-            tikz(
-                img({
-                    src: 'cover.jpg'
-                })
-            ),
-        ].join('\n')
-    })}
-${minipage({
-        vAlign: 'c',
-        width: .5,
-        height: 1,
-        content: 'B'
-    })}
 
+            minipage({
+                vAlign: 't',
+                width: .5,
+                height: 1,
+                content: [
+                    minipage({
+                        vAlign: 'c',
+                        width: 1,
+                        height: .28,
+                        content: [
+                            centering,
+                            Large(title),
+                            '',
+                            vspace(0.5),
+                            normalsize(author)
+                        ].join('\n')
+                    }),
+                    '',
+                    // vfill,
+                    centering,
+                    // tikz([
+                    //     img({ src: 'cover.jpg' }),
+                    //     svgTex(TRANSFORM, fromSvg(emojiMap[emoji]!), colors)
+                    // ].join('\n')),
+                ].join('\n')
+            }),
+            minipage({
+                vAlign: 't',
+                width: .5,
+                height: 1,
+                content: 'B'
+            })
+        ].join('\n')}
 
 \end{document}
 `

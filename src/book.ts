@@ -1,6 +1,6 @@
 import assert from 'assert'
 import z from 'zod'
-import { color, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, svg, type Transform } from './common'
+import { color, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, svg, } from './common'
 import { emojiMap } from './emojis'
 
 
@@ -26,6 +26,13 @@ export const Book = z.object({
     // OTHER PAGES
     pages: z.array(Page),
 })
+
+interface Transform {
+    x: number
+    y: number
+    scale: number
+    rotate: number
+}
 
 const TRANSFORMS_TEXT: Transform[] = [
     { x: 10, y: 15, scale: 2.3, rotate: -15, },
@@ -122,7 +129,11 @@ ${book.pages.map((page, i) => {
             assert(emojis.length <= transforms.length)
             return emojis.map((emoji, i) => {
                 const els = emojiElements[emoji]!
-                return svg(transforms[i]!, els, colors)
+                return svg({
+                    ...transforms[i]!,
+                    elements: els,
+                    colors
+                })
             }).join('\n')
         }
 

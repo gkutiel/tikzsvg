@@ -1,6 +1,7 @@
 import { $ } from "bun"
 import { mkdir, writeFile } from "node:fs/promises"
 import PQueue from "p-queue"
+import sharp from "sharp"
 import { Book, bookTex } from "./book"
 import { Cover, coverTex } from "./cover"
 
@@ -20,6 +21,11 @@ async function tmpDir() {
 interface Build {
     tmp: string,
     tex: string
+}
+
+async function jpg(base64: string) {
+    const b = Buffer.from(base64, 'base64')
+    return await sharp(b).jpeg({ quality: 90 }).toBuffer()
 }
 
 async function pdf({ tmp, tex }: Build) {
@@ -46,11 +52,11 @@ async function book(req: Request) {
     const book = Book.parse(body)
 
     const tmp = await tmpDir()
-    await writeFile(`${tmp}/hero.jpg`, Buffer.from(book.heroJpgBase64, 'base64'))
-    await Promise.all(book.pages.map(async (page, i) => {
+    await writeFile(`${tmp}/hero.jpg`, await jpg(book.heroAvifBase64))
+    for (const [i, page] of book.pages.entries()) {
         console.log(`Writing page ${i} jpg`)
-        writeFile(`${tmp}/${i}.jpg`, Buffer.from(page.jpgBase64, 'base64'))
-    }))
+        await writeFile(`${tmp}/${i}.jpg`, await jpg(page.avifBase64))
+    }
 
     const tex = bookTex(book)
     return pdf({ tmp, tex })
@@ -62,7 +68,7 @@ async function cover(req: Request) {
 
     const tex = coverTex(cover)
     const tmp = await tmpDir()
-    await writeFile(`${tmp}/cover.jpg`, Buffer.from(cover.jpgBase64, 'base64'))
+    await writeFile(`${tmp}/cover.jpg`, await jpg(cover.avifBase64))
     return pdf({ tmp, tex })
 }
 

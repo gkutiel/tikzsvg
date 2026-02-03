@@ -1,7 +1,7 @@
 
 import assert from "assert"
 import { z } from "zod"
-import { absolute, background, bf, centering, colorMap, defineColors, Emoji, footnotesize, fromSvg, getColors, gradient, img, Lang, Large, minipage, normalsize, parskip, poly, quote, ragged, svg, tcolorbox, tikzpicture, txtBackground, vfill, vspace } from "./common"
+import { absolute, avifBase64, background, bf, centering, colorMap, defineColors, Emoji, footnotesize, fromSvg, getColors, gradient, img, Lang, Large, minipage, normalsize, parskip, poly, quote, ragged, svg, tcolorbox, tikzpicture, txtBackground, vfill, vspace } from "./common"
 import { emojiMap } from "./emojis"
 
 const backBackground = String.raw`\fill[
@@ -41,7 +41,7 @@ export const Cover = z.object({
     testimonial_quote: z.string().max(256),
     testimonial_name: z.string().max(64),
     slogan: z.string().max(64),
-    avifBase64: z.string().max(500_000),
+    avifBase64: avifBase64,
 })
 
 export function coverTex({

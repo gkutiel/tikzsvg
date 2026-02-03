@@ -5,6 +5,7 @@ import { emojiMap } from './emojis'
 
 export const color = z.string().length(7)
 export const gradient = z.array(color).length(2)
+export const avifBase64 = z.string().max(700_000)
 
 export type Emoji = z.infer<typeof Emoji>
 export const Emoji = z.object(emojiMap).keyof()

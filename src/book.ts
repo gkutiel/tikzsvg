@@ -1,6 +1,6 @@
 import assert from 'assert'
 import z from 'zod'
-import { color, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, svg, } from './common'
+import { avifBase64, color, colorMap, defineColors, Emoji, fromSvg, getColors, gradient, Lang, svg, } from './common'
 import { emojiMap } from './emojis'
 
 
@@ -10,7 +10,7 @@ export const Page = z.object({
     textBackground: z.string(),
     text: z.string().max(1024),
     emojis: z.array(Emoji).length(6),
-    avifBase64: z.string().max(500_000)
+    avifBase64: avifBase64
 })
 
 export type Book = z.infer<typeof Book>

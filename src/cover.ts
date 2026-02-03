@@ -37,7 +37,7 @@ export const Cover = z.object({
     title: z.string().max(64),
     author: z.string().max(32),
     tagline: z.string().max(128),
-    blurb: z.string().max(700),
+    blurb: z.string().max(800),
     testimonial_quote: z.string().max(256),
     testimonial_name: z.string().max(64),
     slogan: z.string().max(64),

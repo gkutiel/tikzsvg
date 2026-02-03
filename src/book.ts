@@ -181,7 +181,7 @@ ${esText}
 \vspace*{\fill}
 \begin{center}
 \begin{minipage}{10cm}
-\Huge 
+\huge 
 \linespread{${LINE_SPACING}}\selectfont
 \setlength{\parskip}{0.8em}
 ${rtl ? '\\raggedleft' : '\\raggedright'}
